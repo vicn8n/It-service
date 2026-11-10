@@ -1,0 +1,662 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IT Service Desk — Preview (Demo)</title>
+<link rel="stylesheet" href="/css/fonts.css">
+<style>
+:root {
+  --primary: #2563eb; --primary-dark: #1d4ed8; --primary-light: #dbeafe;
+  --success: #16a34a; --success-light: #dcfce7;
+  --warning: #d97706; --warning-light: #fef3c7;
+  --danger: #dc2626; --danger-light: #fee2e2;
+  --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; --gray-300: #d1d5db;
+  --gray-400: #9ca3af; --gray-500: #6b7280; --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937;
+  --sidebar-w: 230px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Prompt', 'Segoe UI', -apple-system, sans-serif; line-height: 1.5; background: var(--gray-100); color: var(--gray-800); }
+a { color: inherit; text-decoration: none; }
+.hidden { display: none !important; }
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e293b, #2563eb); }
+.login-card { background: #fff; border-radius: 14px; padding: 36px; width: 380px; box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+.login-logo { text-align: center; margin-bottom: 24px; }
+.login-logo .t { font-size: 20px; font-weight: 700; color: var(--gray-800); }
+.login-logo .s { font-size: 13px; color: var(--gray-500); margin-top: 4px; }
+.demo-note { background: var(--warning-light); color: #92400e; padding: 8px 12px; border-radius: 8px; font-size: 12px; margin-bottom: 14px; text-align: center; }
+.app { display: flex; min-height: 100vh; }
+.sidebar { width: var(--sidebar-w); background: #1e293b; color: #e2e8f0; display: flex; flex-direction: column; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; }
+.sidebar-logo { padding: 18px 16px; border-bottom: 1px solid #334155; }
+.sidebar-logo .t { font-size: 15px; font-weight: 700; color: #fff; }
+.sidebar-logo .s { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.sidebar-section { padding: 10px 0; }
+.sidebar-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #64748b; padding: 0 16px 6px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 16px; cursor: pointer; font-size: 13.5px; color: #cbd5e1; transition: background .15s; }
+.nav-item:hover { background: #334155; color: #fff; }
+.nav-item.active { background: var(--primary); color: #fff; }
+.nav-item .icon { width: 18px; text-align: center; font-size: 15px; }
+.nav-badge { margin-left: auto; background: #dc2626; color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 600; }
+.chip { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 11.5px; font-weight: 500; background: var(--gray-100); color: var(--gray-600); }
+.chip.blue { background: var(--primary-light); color: var(--primary-dark); }
+.chip.green { background: var(--success-light); color: var(--success); }
+.chip.amber { background: var(--warning-light); color: #92400e; }
+.kb-card { border: 1px solid var(--gray-200); border-radius: 10px; padding: 16px; cursor: pointer; transition: box-shadow .15s, border-color .15s; }
+.kb-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.06); border-color: var(--primary); }
+.cat-tile { border: 1px solid var(--gray-200); border-radius: 10px; padding: 18px; text-align: center; cursor: pointer; transition: box-shadow .15s, transform .1s; }
+.cat-tile:hover { box-shadow: 0 6px 16px rgba(0,0,0,.08); transform: translateY(-2px); border-color: var(--primary); }
+.sidebar-user { margin-top: auto; padding: 12px 16px; border-top: 1px solid #334155; display: flex; align-items: center; gap: 10px; }
+.sidebar-user .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; }
+.sidebar-user .info .name { font-size: 13px; font-weight: 600; }
+.sidebar-user .info .role { font-size: 11px; color: #64748b; }
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+.topbar { background: #fff; border-bottom: 1px solid var(--gray-200); padding: 0 24px; height: 56px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 50; }
+.topbar .bc { font-size: 12px; color: var(--gray-500); }
+.topbar .tt { font-size: 16px; font-weight: 700; }
+.topbar-right { margin-left: auto; display: flex; gap: 12px; align-items: center; }
+.content { padding: 24px; flex: 1; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; font-family: inherit; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-ghost { background: transparent; color: var(--gray-600); border: 1px solid var(--gray-300); }
+.btn-ghost:hover { background: var(--gray-50); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-block { width: 100%; justify-content: center; }
+.card { background: #fff; border-radius: 10px; border: 1px solid var(--gray-200); margin-bottom: 16px; }
+.card-header { padding: 16px 20px; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-size: 14px; font-weight: 600; }
+.card-body { padding: 20px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+.kpi-card { background: #fff; border-radius: 10px; border: 1px solid var(--gray-200); padding: 16px 20px; display: flex; align-items: center; gap: 14px; }
+.kpi-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.kpi-icon.blue { background: var(--primary-light); } .kpi-icon.green { background: var(--success-light); }
+.kpi-icon.yellow { background: var(--warning-light); } .kpi-icon.red { background: var(--danger-light); }
+.kpi-val { font-size: 26px; font-weight: 700; line-height: 1; }
+.kpi-label { font-size: 12px; color: var(--gray-500); margin-top: 3px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { background: var(--gray-50); padding: 10px 14px; text-align: left; font-size: 11.5px; font-weight: 600; color: var(--gray-600); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--gray-200); }
+tbody td { padding: 11px 14px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+tbody tr:hover { background: var(--gray-50); }
+.clickable { cursor: pointer; }
+.link { color: var(--primary); font-weight: 600; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 12px; font-size: 11.5px; font-weight: 500; }
+.badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+.b-NEW { background: #dbeafe; color: #1d4ed8; } .b-NEW::before { background: #2563eb; }
+.b-ASSIGNED { background: #e0e7ff; color: #4338ca; } .b-ASSIGNED::before { background: #6366f1; }
+.b-IN_PROGRESS { background: #fef3c7; color: #92400e; } .b-IN_PROGRESS::before { background: #d97706; }
+.b-PENDING { background: #fce7f3; color: #9d174d; } .b-PENDING::before { background: #ec4899; }
+.b-RESOLVED { background: #dcfce7; color: #14532d; } .b-RESOLVED::before { background: #16a34a; }
+.b-CLOSED { background: var(--gray-100); color: var(--gray-600); } .b-CLOSED::before { background: var(--gray-400); }
+.b-IN_USE { background: #dcfce7; color: #14532d; } .b-IN_USE::before { background: #16a34a; }
+.b-IN_STOCK { background: #dbeafe; color: #1d4ed8; } .b-IN_STOCK::before { background: #2563eb; }
+.b-REPAIR { background: #fee2e2; color: #dc2626; } .b-REPAIR::before { background: #dc2626; }
+.b-LOANED { background: #fef3c7; color: #92400e; } .b-LOANED::before { background: #d97706; }
+.b-RETIRED { background: var(--gray-100); color: var(--gray-500); } .b-RETIRED::before { background: var(--gray-400); }
+.prio { font-weight: 600; }
+.p-CRITICAL { color: #7c2d12; } .p-HIGH { color: #dc2626; } .p-MEDIUM { color: #d97706; } .p-LOW { color: #16a34a; }
+.filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.search-input { flex: 1; min-width: 180px; max-width: 320px; padding: 7px 12px; border: 1px solid var(--gray-300); border-radius: 7px; font-size: 13px; outline: none; }
+select.filter { padding: 7px 10px; border: 1px solid var(--gray-300); border-radius: 7px; font-size: 13px; background: #fff; outline: none; cursor: pointer; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+label { font-size: 12.5px; font-weight: 600; color: var(--gray-700); }
+label .req { color: var(--danger); }
+input, textarea, select { padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: 7px; font-size: 13px; font-family: inherit; outline: none; width: 100%; }
+input:focus, textarea:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+textarea { resize: vertical; min-height: 80px; }
+.form-hint { font-size: 11px; color: var(--gray-500); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.workflow { display: flex; align-items: center; gap: 4px; }
+.wf-step { flex: 1; text-align: center; padding: 6px 8px; background: var(--gray-100); border-radius: 4px; font-size: 12px; font-weight: 500; color: var(--gray-400); }
+.wf-step.done { background: var(--success-light); color: var(--success); }
+.wf-step.current { background: var(--primary); color: #fff; }
+.wf-arrow { color: var(--gray-300); }
+.comment { display: flex; gap: 10px; margin-bottom: 12px; }
+.comment-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--primary); flex-shrink: 0; }
+.comment-content { flex: 1; background: var(--gray-50); border-radius: 8px; padding: 10px 12px; }
+.comment-content.internal { background: #fffbeb; border: 1px solid #fde68a; }
+.comment-author { font-size: 12px; font-weight: 600; }
+.comment-time { font-size: 11px; color: var(--gray-400); margin-left: 8px; }
+.comment-text { font-size: 13px; margin-top: 4px; line-height: 1.5; }
+.progress-bar { background: var(--gray-200); border-radius: 100px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--primary); height: 100%; }
+.empty { text-align: center; color: var(--gray-400); padding: 40px; font-size: 14px; }
+.pagination { padding: 12px 20px; border-top: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--gray-500); }
+.dl { display: grid; grid-template-columns: 130px 1fr; gap: 8px; font-size: 13px; }
+.dl dt { color: var(--gray-500); } .dl dd { font-weight: 500; }
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--gray-800); color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 13px; z-index: 1000; box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+.toast.success { background: var(--success); }
+.dash-hero { position: relative; overflow: hidden; border-radius: 18px; padding: 26px 30px; margin-bottom: 22px; background: linear-gradient(120deg, #0f172a 0%, #1d4ed8 55%, #3b82f6 100%); color: #fff; box-shadow: 0 14px 34px rgba(29,78,216,.28); }
+.dash-hero h2 { font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
+.dash-hero p { font-size: 13.5px; opacity: .85; margin-top: 6px; }
+.dash-hero .hero-deco { position: absolute; right: 14px; top: -28px; font-size: 150px; opacity: .13; transform: rotate(-8deg); pointer-events: none; }
+.dash-hero .hero-pills { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.hero-pill { background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(6px); padding: 6px 14px; border-radius: 30px; font-size: 12.5px; font-weight: 500; }
+.hero-pill b { font-weight: 800; margin-right: 4px; }
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 22px; }
+.stat-card { position: relative; overflow: hidden; border-radius: 16px; padding: 18px 20px; color: #fff; box-shadow: 0 10px 24px rgba(2,6,23,.12); transition: transform .18s ease, box-shadow .18s ease; }
+.stat-card:hover { transform: translateY(-5px); box-shadow: 0 18px 38px rgba(2,6,23,.22); }
+.stat-card.v-blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.stat-card.v-green { background: linear-gradient(135deg, #22c55e, #15803d); }
+.stat-card.v-amber { background: linear-gradient(135deg, #fbbf24, #d97706); }
+.stat-card.v-red { background: linear-gradient(135deg, #fb7185, #be123c); }
+.stat-card.v-violet { background: linear-gradient(135deg, #a78bfa, #6d28d9); }
+.stat-card.v-cyan { background: linear-gradient(135deg, #22d3ee, #0e7490); }
+.stat-card .blob { position: absolute; border-radius: 50%; background: rgba(255,255,255,.16); }
+.stat-card .blob.b1 { width: 120px; height: 120px; top: -44px; right: -32px; }
+.stat-card .blob.b2 { width: 70px; height: 70px; bottom: -28px; right: 34px; background: rgba(255,255,255,.10); }
+.stat-top { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
+.stat-ic { font-size: 22px; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.22); border-radius: 13px; }
+.stat-trend { font-size: 11px; font-weight: 700; background: rgba(255,255,255,.22); padding: 3px 9px; border-radius: 20px; }
+.stat-val { font-size: 38px; font-weight: 800; line-height: 1; margin-top: 14px; position: relative; z-index: 1; }
+.stat-label { font-size: 13px; opacity: .92; margin-top: 6px; position: relative; z-index: 1; }
+.bar-row { margin-bottom: 15px; }
+.bar-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 6px; }
+.bar-head .v { font-weight: 700; }
+.bar-track { height: 10px; border-radius: 100px; background: var(--gray-100); overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 100px; animation: growbar .9s cubic-bezier(.22,1,.36,1); }
+@keyframes growbar { from { width: 0 !important; } }
+.donut-wrap { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; justify-content: center; padding: 6px 0; }
+.donut circle.seg { transition: stroke-dashoffset .7s ease; }
+.donut-num { font-size: 28px; font-weight: 800; fill: var(--gray-800); }
+.donut-sub { font-size: 11px; fill: var(--gray-500); }
+.legend { display: flex; flex-direction: column; gap: 11px; min-width: 180px; }
+.legend-item { display: flex; align-items: center; gap: 9px; font-size: 13px; }
+.legend-dot { width: 11px; height: 11px; border-radius: 4px; flex-shrink: 0; }
+.legend-item .lc { margin-left: auto; font-weight: 700; }
+@media (max-width: 720px) {
+  .kpi-grid, .stat-grid { grid-template-columns: 1fr 1fr; }
+  .grid-2, .form-grid { grid-template-columns: 1fr; }
+  .sidebar { transform: translateX(-100%); }
+  .main { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-view" class="login-wrap">
+  <form class="login-card" onsubmit="event.preventDefault(); enterApp();">
+    <div class="login-logo">
+      <div class="t">🖥️ IT Service Desk</div>
+      <div class="s">ระบบแจ้งซ่อม IT และทะเบียนทรัพย์สิน</div>
+    </div>
+    <div class="demo-note">🔸 โหมด Demo (ไฟล์เดียว ไม่ต้องมี server) — กดเข้าสู่ระบบได้เลย</div>
+    <div class="form-group" style="margin-bottom:14px"><label>อีเมล</label>
+      <input type="email" value="admin@company.local"></div>
+    <div class="form-group" style="margin-bottom:20px"><label>รหัสผ่าน</label>
+      <input type="password" value="Admin@1234"></div>
+    <button type="submit" class="btn btn-primary btn-block">เข้าสู่ระบบ</button>
+  </form>
+</div>
+
+<!-- APP -->
+<div id="app-view" class="app hidden">
+  <nav class="sidebar">
+    <div class="sidebar-logo"><div class="t">🖥️ IT Service Desk</div><div class="s">บริษัท ตัวอย่าง จำกัด</div></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">แจ้งซ่อม / บริการ</div>
+      <div class="nav-item" data-route="helpdesk"><span class="icon">📊</span> Dashboard</div>
+      <div class="nav-item" data-route="tickets"><span class="icon">🎫</span> รายการแจ้งซ่อม</div>
+      <div class="nav-item" data-route="ticket-new"><span class="icon">➕</span> แจ้งซ่อมใหม่</div>
+      <div class="nav-item" data-route="catalog"><span class="icon">🛒</span> Service Catalog</div>
+      <div class="nav-item" data-route="approvals"><span class="icon">✅</span> งานรออนุมัติ<span class="nav-badge">1</span></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Knowledge Base</div>
+      <div class="nav-item" data-route="kb"><span class="icon">📚</span> คลังความรู้</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">ทรัพย์สิน IT</div>
+      <div class="nav-item" data-route="assets-dash"><span class="icon">📦</span> ภาพรวมทรัพย์สิน</div>
+      <div class="nav-item" data-route="assets"><span class="icon">🗄️</span> รายการทรัพย์สิน</div>
+      <div class="nav-item" data-route="licenses"><span class="icon">📄</span> Software License</div>
+      <div class="nav-item" data-route="vendors"><span class="icon">🏢</span> ผู้จำหน่าย</div>
+      <div class="nav-item" data-route="contracts"><span class="icon">📋</span> สัญญา/ประกัน</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">รายงาน & ผู้ดูแล</div>
+      <div class="nav-item" data-route="reports"><span class="icon">📈</span> รายงาน & วิเคราะห์</div>
+      <div class="nav-item" data-route="users"><span class="icon">👥</span> ผู้ใช้งาน</div>
+      <div class="nav-item" data-route="settings"><span class="icon">⚙️</span> ตั้งค่าระบบ</div>
+      <div class="nav-item" data-route="audit"><span class="icon">📜</span> Audit Log</div>
+    </div>
+    <div class="sidebar-user"><div class="avatar">ผ</div><div class="info"><div class="name">ผู้ดูแลระบบ</div><div class="role">IT Administrator</div></div></div>
+  </nav>
+  <div class="main">
+    <div class="topbar">
+      <div><div class="bc">IT Service Management</div><div class="tt" id="page-title">Dashboard</div></div>
+      <div class="topbar-right">
+        <span style="position:relative;cursor:pointer;font-size:18px" title="การแจ้งเตือน">🔔<span style="position:absolute;top:-4px;right:-6px;background:#dc2626;color:#fff;font-size:9px;padding:0 4px;border-radius:8px">3</span></span>
+        <button class="btn btn-ghost btn-sm" onclick="logout()">ออกจากระบบ</button>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<script>
+// ───────── Mock data ─────────
+const CATS = ["Software / OS","Network / อินเทอร์เน็ต","Account / Password","Printer / Scanner","Hardware"];
+const TICKET_STATUS = { NEW:"ใหม่", ASSIGNED:"มอบหมายแล้ว", IN_PROGRESS:"กำลังดำเนินการ", PENDING:"รอดำเนินการ", RESOLVED:"แก้ไขแล้ว", CLOSED:"ปิด", CANCELLED:"ยกเลิก" };
+const PRIORITY = { CRITICAL:"วิกฤต", HIGH:"สูง", MEDIUM:"กลาง", LOW:"ต่ำ" };
+const ASSET_STATUS = { IN_USE:"ใช้งานอยู่", IN_STOCK:"ว่าง/พร้อมใช้", REPAIR:"อยู่ระหว่างซ่อม", LOANED:"ยืมออก", RETIRED:"รอจำหน่าย" };
+const FLOW = ["NEW","ASSIGNED","IN_PROGRESS","RESOLVED","CLOSED"];
+
+const tickets = [
+  { id:1, no:"INC-0001", subject:"คอมพิวเตอร์เปิดไม่ติด", desc:"กดปุ่มเปิดเครื่องแล้วไฟไม่ขึ้น ไม่มีเสียงพัดลม ลองเสียบปลั๊กใหม่แล้วยังไม่ได้", cat:"Hardware", priority:"HIGH", status:"IN_PROGRESS", requester:"สมหญิง วงษ์ดี", dept:"HR", email:"somying@company.local", assignee:"วิชัย ช่าง", asset:"PC-HR-003", sla:"breach" },
+  { id:2, no:"INC-0002", subject:"ปริ้นเตอร์ไม่ยอม print เอกสาร", desc:"สั่งพิมพ์แล้วงานค้างใน queue ไฟกระพริบสีส้ม", cat:"Printer / Scanner", priority:"MEDIUM", status:"ASSIGNED", requester:"มานี รักดี", dept:"บัญชี/การเงิน", email:"manee@company.local", assignee:"วิชัย ช่าง", asset:"PRN-ACC-01", sla:"warn" },
+  { id:3, no:"INC-0003", subject:"อินเทอร์เน็ตช้ามาก ใช้งานไม่ได้", desc:"ทั้งชั้น 3 เน็ตช้าตั้งแต่เช้า เปิดเว็บไม่ขึ้น", cat:"Network / อินเทอร์เน็ต", priority:"MEDIUM", status:"NEW", requester:"ประสิทธิ์ มั่นคง", dept:"ฝ่ายขาย", email:"prasit@company.local", assignee:"", asset:"", sla:"ok" },
+  { id:4, no:"INC-0004", subject:"ลืมรหัสผ่าน Windows", desc:"เข้าเครื่องไม่ได้ ลืมรหัสผ่าน", cat:"Account / Password", priority:"LOW", status:"RESOLVED", requester:"มานี รักดี", dept:"บัญชี/การเงิน", email:"manee@company.local", assignee:"สมชาย IT", asset:"PC-FIN-007", sla:"done" },
+  { id:5, no:"INC-0005", subject:"Microsoft Office แจ้ง license หมดอายุ", desc:"เปิด Word/Excel ขึ้นข้อความ license หมดอายุ", cat:"Software / OS", priority:"CRITICAL", status:"CLOSED", requester:"สมหญิง วงษ์ดี", dept:"HR", email:"somying@company.local", assignee:"สมชาย IT", asset:"", sla:"done" },
+  { id:6, no:"INC-0006", subject:"ขอติดตั้งโปรแกรม Zoom", desc:"ต้องใช้ประชุมกับลูกค้าวันพรุ่งนี้", cat:"Software / OS", priority:"LOW", status:"NEW", requester:"ประสิทธิ์ มั่นคง", dept:"ฝ่ายขาย", email:"prasit@company.local", assignee:"", asset:"", sla:"ok" },
+];
+
+const assets = [
+  { id:1, tag:"PC-HR-003", type:"Desktop", icon:"💻", brand:"Dell", model:"OptiPlex 7090", serial:"DLTBX4321", host:"PC-HR-003", ip:"192.168.1.103", os:"Windows 11 Pro", spec:"i5-11500, 16GB, SSD 512GB", status:"REPAIR", owner:"สมหญิง วงษ์ดี", dept:"HR", loc:"ชั้น 2 ห้อง HR-201", price:28500, vendor:"Dell Thailand", po:"PO-2023-0142", warranty:"15/03/2569" },
+  { id:2, tag:"NB-MGR-002", type:"Notebook", icon:"💼", brand:"Apple", model:"MacBook Pro 14", serial:"C02XG2KJJGH5", host:"NB-MGR-002", ip:"-", os:"macOS Sonoma", spec:"M3 Pro, 18GB, SSD 512GB", status:"IN_USE", owner:"-", dept:"ผู้บริหาร", loc:"ชั้น 4 ห้อง MD", price:89900, vendor:"iStudio", po:"-", warranty:"22/06/2569" },
+  { id:3, tag:"PRN-ACC-01", type:"Printer", icon:"🖨️", brand:"HP", model:"LaserJet Pro M428fdn", serial:"CNBJ239841", host:"-", ip:"192.168.1.50", os:"-", spec:"Network, Duplex, Fax", status:"IN_USE", owner:"-", dept:"บัญชี/การเงิน", loc:"ชั้น 1 บัญชี", price:12900, vendor:"-", po:"-", warranty:"31/12/2567" },
+  { id:4, tag:"PC-FIN-007", type:"Desktop", icon:"💻", brand:"HP", model:"EliteDesk 800 G6", serial:"HPED800712", host:"PC-FIN-007", ip:"192.168.1.107", os:"Windows 11 Pro", spec:"i5, 8GB, SSD 256GB", status:"IN_USE", owner:"-", dept:"บัญชี/การเงิน", loc:"ชั้น 1 การเงิน", price:26000, vendor:"-", po:"-", warranty:"28/06/2569" },
+  { id:5, tag:"SRV-001", type:"Server", icon:"🖥️", brand:"Dell", model:"PowerEdge R750", serial:"7XYZABC1234", host:"SRV-PROD-01", ip:"192.168.1.10", os:"Windows Server 2022", spec:"Xeon Silver, 64GB, 2TB RAID", status:"IN_USE", owner:"ทีม IT", dept:"IT", loc:"Server Room", price:185000, vendor:"-", po:"-", warranty:"15/06/2569" },
+  { id:6, tag:"MON-HR-003", type:"Monitor", icon:"🖥️", brand:"Dell", model:"P2422H 24\"", serial:"DLMON2422", host:"-", ip:"-", os:"-", spec:"24\" IPS Full HD", status:"IN_USE", owner:"-", dept:"HR", loc:"ชั้น 2 HR", price:5900, vendor:"-", po:"-", warranty:"15/03/2570" },
+  { id:7, tag:"SW-CORE-01", type:"Network Equipment", icon:"🌐", brand:"Cisco", model:"Catalyst 2960X", serial:"CSCO2960X1", host:"-", ip:"192.168.1.2", os:"-", spec:"24-port Gigabit", status:"IN_USE", owner:"ทีม IT", dept:"IT", loc:"Server Room", price:45000, vendor:"-", po:"-", warranty:"20/05/2570" },
+  { id:8, tag:"NB-SALE-005", type:"Notebook", icon:"💼", brand:"Lenovo", model:"ThinkPad E14", serial:"LNVE14005", host:"NB-SALE-005", ip:"-", os:"Windows 11 Pro", spec:"i5, 16GB, SSD 512GB", status:"IN_STOCK", owner:"-", dept:"-", loc:"คลังอะไหล่", price:24500, vendor:"-", po:"-", warranty:"10/01/2570" },
+];
+
+// ───────── ข้อมูลโมดูลเสริม ─────────
+const catalog = [
+  { name:"ขอติดตั้งโปรแกรม", icon:"📦", desc:"ขอติดตั้งซอฟต์แวร์ที่ได้รับอนุญาต", approval:false },
+  { name:"ขอสิทธิ์เข้าระบบ", icon:"🔑", desc:"ขอสิทธิ์เข้าถึงระบบ/โฟลเดอร์", approval:true },
+  { name:"ขออุปกรณ์ใหม่", icon:"🖥️", desc:"ขอคอมพิวเตอร์/อุปกรณ์ IT ใหม่", approval:true },
+  { name:"ขอ Email/Account ใหม่", icon:"📧", desc:"สร้างบัญชีอีเมลพนักงานใหม่", approval:true },
+  { name:"รีเซ็ตรหัสผ่าน", icon:"🔄", desc:"ขอรีเซ็ตรหัสผ่านระบบ", approval:false },
+  { name:"ย้าย/ติดตั้งอุปกรณ์", icon:"🚚", desc:"ขอย้ายหรือติดตั้งอุปกรณ์ใหม่", approval:false },
+];
+const kbCats = [
+  { name:"เริ่มต้นใช้งาน", icon:"🚀", n:1 }, { name:"อีเมล & Office", icon:"📧", n:1 },
+  { name:"เครือข่าย & VPN", icon:"🌐", n:1 }, { name:"ฮาร์ดแวร์", icon:"💻", n:1 }, { name:"ความปลอดภัย", icon:"🔒", n:1 },
+];
+const kbArticles = [
+  { id:1, title:"วิธีรีเซ็ตรหัสผ่าน Windows ด้วยตัวเอง", cat:"เริ่มต้นใช้งาน", tags:"password, windows, login", views:142, summary:"ขั้นตอนรีเซ็ตรหัสผ่านเบื้องต้น", body:"1. ที่หน้า login คลิก 'ลืมรหัสผ่าน'\n2. ยืนยันตัวตนผ่านอีเมลองค์กร\n3. ตั้งรหัสผ่านใหม่ (อย่างน้อย 8 ตัว มีตัวเลขและอักษรพิมพ์ใหญ่)\n4. หากยังเข้าไม่ได้ ติดต่อ IT ที่เบอร์ภายใน 1234" },
+  { id:2, title:"ตั้งค่า VPN สำหรับทำงานจากบ้าน (WFH)", cat:"เครือข่าย & VPN", tags:"vpn, wfh, remote", views:98, summary:"เชื่อมต่อ VPN องค์กรจากภายนอก", body:"1. ติดตั้งโปรแกรม FortiClient\n2. กรอก Gateway: vpn.company.local\n3. ใช้ username/password เดียวกับเข้าคอมฯ\n4. กด Connect — ไฟเขียวคือเชื่อมต่อสำเร็จ" },
+  { id:3, title:"เพิ่มอีเมลองค์กรในมือถือ (Outlook)", cat:"อีเมล & Office", tags:"email, outlook, mobile", views:75, summary:"ตั้งค่า Outlook บนมือถือ", body:"1. ติดตั้งแอป Microsoft Outlook\n2. เพิ่มบัญชี → กรอกอีเมล @company.local\n3. ใส่รหัสผ่าน + ยืนยัน MFA\n4. รอ sync เมล" },
+  { id:4, title:"ปริ้นเตอร์ไม่พิมพ์ — แก้ไขเบื้องต้น", cat:"ฮาร์ดแวร์", tags:"printer, hardware", views:210, summary:"ตรวจสอบ 5 ขั้นก่อนแจ้งซ่อม", body:"1. ตรวจไฟและสาย\n2. เคลียร์งานค้างใน print queue\n3. ตรวจกระดาษ/หมึก\n4. restart เครื่องปริ้น\n5. ถ้ายังไม่ได้ แจ้งซ่อมผ่านระบบ พร้อมรหัส Asset" },
+  { id:5, title:"นโยบายความปลอดภัยรหัสผ่าน", cat:"ความปลอดภัย", tags:"security, policy", views:56, summary:"ข้อกำหนดรหัสผ่านองค์กร", body:"- อย่างน้อย 8 ตัวอักษร\n- ผสมตัวพิมพ์ใหญ่/เล็ก ตัวเลข อักขระพิเศษ\n- เปลี่ยนทุก 90 วัน\n- ห้ามใช้ซ้ำ 3 ครั้งล่าสุด\n- เปิด MFA ทุกบัญชี" },
+];
+const vendors = [
+  { id:1, name:"Dell Thailand", contact:"ฝ่ายขายองค์กร", phone:"02-000-1111", email:"sales@dell.co.th", assets:2, contracts:1, licenses:0 },
+  { id:2, name:"iStudio by Comseven", contact:"-", phone:"02-000-2222", email:"-", assets:1, contracts:0, licenses:0 },
+  { id:3, name:"SVOA Public Co.", contact:"-", phone:"02-000-3333", email:"-", assets:1, contracts:0, licenses:0 },
+  { id:4, name:"Microsoft (Reseller)", contact:"-", phone:"-", email:"licensing@partner.co.th", assets:0, contracts:1, licenses:1 },
+];
+const licenses = [
+  { id:1, name:"Microsoft 365 Business Standard", publisher:"Microsoft", total:50, used:42, expiry:"31/12/2569", cost:360000 },
+  { id:2, name:"Adobe Acrobat Pro", publisher:"Adobe", total:10, used:8, expiry:"30/09/2569", cost:65000 },
+  { id:3, name:"Windows 11 Pro (Volume)", publisher:"Microsoft", total:100, used:58, expiry:"-", cost:0 },
+  { id:4, name:"Zoom Business", publisher:"Zoom", total:20, used:11, expiry:"15/08/2569", cost:48000 },
+];
+const contracts = [
+  { no:"CT-2024-001", name:"MA Server PowerEdge", type:"MAINTENANCE", vendor:"Dell Thailand", end:"15/06/2569", value:35000 },
+  { no:"CT-2024-002", name:"Microsoft 365 Subscription", type:"SUBSCRIPTION", vendor:"Microsoft (Reseller)", end:"31/12/2569", value:360000 },
+  { no:"CT-2023-018", name:"ประกัน Notebook ผู้บริหาร", type:"WARRANTY", vendor:"iStudio", end:"22/06/2569", value:0 },
+];
+const approvals = [
+  { id:1, ticketNo:"INC-0005", subject:"ขอสิทธิ์เข้าโฟลเดอร์ฝ่ายขาย", requester:"ประสิทธิ์ มั่นคง", type:"SERVICE_REQUEST", date:"11/06/2569" },
+];
+const CONTRACT_TYPE = { WARRANTY:"ประกัน", MAINTENANCE:"สัญญา MA", SUBSCRIPTION:"Subscription", LEASE:"เช่า", SUPPORT:"Support" };
+const auditLog = [
+  { time:"11/06/2569 11:15", user:"สมชาย IT", action:"APPROVAL_APPROVED", entity:"Ticket #INC-0005", ip:"192.168.1.5" },
+  { time:"11/06/2569 10:30", user:"วิชัย ช่าง", action:"UPDATE_TICKET", entity:"Ticket #INC-0001", ip:"192.168.1.8" },
+  { time:"11/06/2569 09:15", user:"สมหญิง วงษ์ดี", action:"CREATE_TICKET", entity:"Ticket #INC-0001", ip:"192.168.2.3" },
+  { time:"11/06/2569 08:50", user:"ผู้ดูแลระบบ", action:"CREATE_ASSET", entity:"Asset PC-HR-003", ip:"192.168.1.2" },
+  { time:"10/06/2569 17:20", user:"สมชาย IT", action:"CREATE_LICENSE", entity:"SoftwareLicense Adobe", ip:"192.168.1.5" },
+];
+
+// ───────── helpers ─────────
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const sBadge = (s) => `<span class="badge b-${s}">${esc(TICKET_STATUS[s] || ASSET_STATUS[s] || s)}</span>`;
+const pTag = (p) => `<span class="prio p-${p}">${esc(PRIORITY[p] || p)}</span>`;
+function slaTag(t) {
+  if (t.sla === "breach") return `<span style="color:var(--danger);font-weight:600;font-size:12px">🔴 เกิน SLA</span>`;
+  if (t.sla === "warn") return `<span style="color:var(--warning);font-size:12px">🟡 เหลือ 2 ชม.</span>`;
+  if (t.sla === "ok") return `<span style="color:var(--success);font-size:12px">🟢 ใน SLA</span>`;
+  return `<span style="color:var(--gray-400);font-size:12px">—</span>`;
+}
+function kpi(c,i,v,l){ return `<div class="kpi-card"><div class="kpi-icon ${c}">${i}</div><div><div class="kpi-val">${v}</div><div class="kpi-label">${esc(l)}</div></div></div>`; }
+function toast(m){ const t=document.createElement("div"); t.className="toast success"; t.textContent=m; document.body.appendChild(t); setTimeout(()=>t.remove(),2500); }
+const STATUS_COLOR = { NEW:"#3b82f6", ASSIGNED:"#6366f1", IN_PROGRESS:"#d97706", PENDING:"#ec4899", RESOLVED:"#16a34a", CLOSED:"#94a3b8", CANCELLED:"#cbd5e1", AWAITING_APPROVAL:"#f59e0b", IN_USE:"#16a34a", IN_STOCK:"#3b82f6", REPAIR:"#dc2626", LOANED:"#d97706", RETIRED:"#94a3b8", DISPOSED:"#1f2937" };
+const BAR_COLORS = ["#3b82f6,#6366f1","#22c55e,#15803d","#f59e0b,#d97706","#ec4899,#be185d","#06b6d4,#0e7490","#a78bfa,#6d28d9"];
+function statCard(variant, icon, val, label, trend) { return `<div class="stat-card v-${variant}"><span class="blob b1"></span><span class="blob b2"></span><div class="stat-top"><span class="stat-ic">${icon}</span>${trend?`<span class="stat-trend">${trend}</span>`:""}</div><div class="stat-val">${val}</div><div class="stat-label">${esc(label)}</div></div>`; }
+function barRow(label, count, pct, gradient) { return `<div class="bar-row"><div class="bar-head"><span>${esc(label)}</span><span class="v">${count} <span style="color:var(--gray-400);font-weight:500">(${pct}%)</span></span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:linear-gradient(90deg,${gradient})"></div></div></div>`; }
+function donutChart(segments, centerNum, centerSub) {
+  const total = segments.reduce((s,x)=>s+x.count,0)||1, R=56, C=2*Math.PI*R; let offset=0;
+  const arcs = segments.filter(s=>s.count>0).map((s)=>{ const len=(s.count/total)*C, dash=`${len} ${C-len}`, o=-offset; offset+=len; return `<circle class="seg" cx="75" cy="75" r="${R}" fill="none" stroke="${s.color}" stroke-width="22" stroke-dasharray="${dash}" stroke-dashoffset="${o}" transform="rotate(-90 75 75)"></circle>`; }).join("");
+  const legend = segments.map((s)=>`<div class="legend-item"><span class="legend-dot" style="background:${s.color}"></span>${esc(s.label)}<span class="lc">${s.count}</span></div>`).join("");
+  return `<div class="donut-wrap"><svg viewBox="0 0 150 150" width="170" height="170" class="donut"><circle cx="75" cy="75" r="${R}" fill="none" stroke="var(--gray-100)" stroke-width="22"></circle>${arcs}<text x="75" y="72" text-anchor="middle" class="donut-num">${centerNum}</text><text x="75" y="90" text-anchor="middle" class="donut-sub">${esc(centerSub)}</text></svg><div class="legend">${legend}</div></div>`;
+}
+function greeting(){ const h=new Date().getHours(); return h<12?"สวัสดีตอนเช้า":h<17?"สวัสดีตอนบ่าย":"สวัสดีตอนเย็น"; }
+function fmtNow(){ return new Date().toLocaleString("th-TH",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}); }
+
+// ───────── pages ─────────
+const Pages = {
+  helpdesk() {
+    const open = tickets.filter(t=>["NEW","ASSIGNED","IN_PROGRESS","PENDING"].includes(t.status)).length;
+    const resolved = tickets.filter(t=>["RESOLVED","CLOSED"].includes(t.status)).length;
+    const byCat = CATS.map(c=>({c, n:tickets.filter(t=>t.cat===c).length})).filter(x=>x.n);
+    const total = tickets.length;
+    const rate = Math.round(resolved/total*100);
+    const catRows = byCat.sort((a,b)=>b.n-a.n).map((x,i)=>{const p=Math.round(x.n/total*100);return barRow(x.c, x.n, p, BAR_COLORS[i%BAR_COLORS.length]);}).join("");
+    const statuses = [...new Set(tickets.map(t=>t.status))];
+    const segs = statuses.map(s=>({label:TICKET_STATUS[s]||s, count:tickets.filter(t=>t.status===s).length, color:STATUS_COLOR[s]||"#94a3b8"}));
+    return { title:"Dashboard — แจ้งซ่อม IT", html:`
+      <div class="dash-hero">
+        <span class="hero-deco">🎧</span>
+        <h2>${greeting()}, ผู้ดูแลระบบ 👋</h2>
+        <p>ภาพรวมงานบริการ IT ประจำเดือน · อัปเดตล่าสุด ${fmtNow()}</p>
+        <div class="hero-pills"><span class="hero-pill"><b>${open}</b> งานที่ต้องดำเนินการ</span><span class="hero-pill"><b>${rate}%</b> อัตราการแก้ไข</span><span class="hero-pill"><b>1</b> เกิน SLA</span></div>
+      </div>
+      <div class="stat-grid">${statCard("blue","🎫",total,"Ticket เดือนนี้","เดือนนี้")}${statCard("amber","⏳",open,"รอดำเนินการ")}${statCard("green","✅",resolved,"แก้ไขแล้ว",rate+"%")}${statCard("red","🚨",1,"เกิน SLA")}</div>
+      <div class="grid-2">
+        <div class="card"><div class="card-header"><div class="card-title">📊 Ticket ตามหมวดหมู่</div></div><div class="card-body">${catRows}</div></div>
+        <div class="card"><div class="card-header"><div class="card-title">📋 สถานะ Ticket</div></div><div class="card-body">${donutChart(segs, total, "Ticket ทั้งหมด")}</div></div>
+      </div>` };
+  },
+  tickets() {
+    const rows = tickets.map(t=>`<tr class="clickable" onclick="go('ticket-detail',${t.id})">
+      <td class="link">${t.no}</td>
+      <td><div style="font-weight:500">${esc(t.subject)}</div><div style="font-size:11.5px;color:var(--gray-500)">${esc(t.cat)}</div></td>
+      <td>${esc(t.requester)}<div style="font-size:11.5px;color:var(--gray-500)">${esc(t.dept)}</div></td>
+      <td>${pTag(t.priority)}</td><td>${sBadge(t.status)}</td><td>${esc(t.assignee||"—")}</td>
+      <td style="font-size:12px">11/06/2569</td><td>${slaTag(t)}</td></tr>`).join("");
+    return { title:"รายการแจ้งซ่อม IT", html:`
+      <div class="filter-bar">
+        <input class="search-input" placeholder="ค้นหา Ticket ID, หัวข้อ...">
+        <select class="filter"><option>สถานะทั้งหมด</option>${Object.values(TICKET_STATUS).map(v=>`<option>${v}</option>`).join("")}</select>
+        <select class="filter"><option>ความสำคัญทั้งหมด</option>${Object.values(PRIORITY).map(v=>`<option>${v}</option>`).join("")}</select>
+        <button class="btn btn-primary btn-sm" onclick="go('ticket-new')">+ แจ้งซ่อมใหม่</button>
+      </div>
+      <div class="card"><div class="card-header"><div class="card-title">Ticket ทั้งหมด <span style="font-weight:400;color:var(--gray-500)">(${tickets.length})</span></div></div>
+      <div class="table-wrap"><table><thead><tr><th>Ticket ID</th><th>หัวข้อ</th><th>ผู้แจ้ง</th><th>ความสำคัญ</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th><th>วันที่แจ้ง</th><th>SLA</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="pagination"><span>ทั้งหมด ${tickets.length} รายการ</span></div></div>` };
+  },
+  "ticket-detail"(id) {
+    const t = tickets.find(x=>x.id===id) || tickets[0];
+    const cur = FLOW.indexOf(t.status);
+    const wf = FLOW.map((s,i)=>`<div class="wf-step ${t.status===s?"current":i<cur?"done":""}">${TICKET_STATUS[s]}</div>`).join('<span class="wf-arrow">→</span>');
+    const a = assets.find(x=>x.tag===t.asset);
+    return { title:`${t.no} — ${t.subject}`, html:`
+      <div class="card"><div class="card-body" style="padding:14px 20px"><div style="font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:8px">ขั้นตอนการดำเนินการ</div><div class="workflow">${wf}</div></div></div>
+      <div class="card">
+        <div style="padding:20px;border-bottom:1px solid var(--gray-200)">
+          <div style="font-size:12px;color:var(--gray-500);font-weight:600">${t.no} · แจ้งซ่อม IT</div>
+          <div style="font-size:17px;font-weight:700;margin:4px 0">${esc(t.subject)}</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--gray-500)">${sBadge(t.status)} ${pTag(t.priority)}<span>${esc(t.cat)}</span><span>แจ้งเมื่อ <b>11/06/2569 09:15</b></span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 280px">
+          <div style="padding:20px;border-right:1px solid var(--gray-200)">
+            <div style="margin-bottom:16px"><label style="font-size:11.5px;text-transform:uppercase;color:var(--gray-500)">รายละเอียดปัญหา</label><p style="font-size:13.5px;line-height:1.6;margin-top:4px">${esc(t.desc)}</p></div>
+            <label style="font-size:11.5px;text-transform:uppercase;color:var(--gray-500)">บันทึกการดำเนินการ</label>
+            <div style="margin-top:10px">${t.assignee?`<div class="comment"><div class="comment-avatar">${esc(t.assignee[0])}</div><div class="comment-content"><div><span class="comment-author">${esc(t.assignee)}</span><span class="comment-time">11/06/2569 10:30</span></div><div class="comment-text">รับเรื่องแล้ว กำลังตรวจสอบครับ</div></div></div>`:'<div class="empty">ยังไม่มีบันทึก</div>'}</div>
+            <div style="margin-top:16px"><textarea placeholder="พิมพ์บันทึก / ข้อความ..."></textarea>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><label style="display:flex;gap:6px;font-size:12px;font-weight:400"><input type="checkbox" style="width:auto"> บันทึกภายใน</label><button class="btn btn-primary btn-sm" onclick="toast('บันทึกแล้ว (demo)')">💾 บันทึก</button></div></div>
+          </div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:16px">
+            <div><div style="font-size:11.5px;text-transform:uppercase;color:var(--gray-500);margin-bottom:10px">ข้อมูล Ticket</div>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+                ${kvRow("ผู้แจ้ง",t.requester)}${kvRow("แผนก",t.dept)}${kvRow("อีเมล",t.email)}${kvRow("ผู้รับผิดชอบ",t.assignee||"—")}</div></div>
+            ${a?`<div style="background:var(--gray-50);border-radius:8px;padding:12px"><div style="font-size:11.5px;text-transform:uppercase;color:var(--gray-500);margin-bottom:8px">Asset ที่เกี่ยวข้อง</div><div class="link clickable" onclick="go('asset-detail',${a.id})">${a.tag} — ${esc(a.brand)} ${esc(a.model)}</div></div>`:""}
+            <div><div style="font-size:11.5px;text-transform:uppercase;color:var(--gray-500);margin-bottom:10px">จัดการ (เจ้าหน้าที่)</div>
+              <div class="form-group" style="margin-bottom:10px"><label>สถานะ</label><select>${Object.entries(TICKET_STATUS).map(([k,v])=>`<option ${t.status===k?"selected":""}>${v}</option>`).join("")}</select></div>
+              <div class="form-group"><label>ผู้รับผิดชอบ</label><select><option>วิชัย ช่าง</option><option>สมชาย IT</option></select></div></div>
+          </div>
+        </div>
+      </div>` };
+  },
+  "ticket-new"() {
+    return { title:"แจ้งซ่อมใหม่", html:`
+      <div class="card" style="max-width:800px"><div class="card-header"><div class="card-title">📋 แบบฟอร์มแจ้งซ่อม IT</div></div>
+      <div class="card-body"><div class="form-grid">
+        <div class="form-group full"><label>หัวข้อปัญหา <span class="req">*</span></label><input placeholder="สรุปปัญหาโดยย่อ"></div>
+        <div class="form-group"><label>หมวดหมู่ <span class="req">*</span></label><select><option>-- เลือก --</option>${CATS.map(c=>`<option>${c}</option>`).join("")}</select></div>
+        <div class="form-group"><label>ความสำคัญ <span class="req">*</span></label><select><option>🔴 วิกฤต</option><option>🟠 สูง</option><option selected>🟡 กลาง</option><option>🟢 ต่ำ</option></select></div>
+        <div class="form-group full"><label>รายละเอียดปัญหา <span class="req">*</span></label><textarea style="min-height:100px" placeholder="อธิบายอาการที่พบ..."></textarea></div>
+        <div class="form-group"><label>Asset ที่เกี่ยวข้อง</label><input placeholder="รหัส Asset เช่น PC-HR-003"></div>
+        <div class="form-group"><label>สถานที่</label><input placeholder="ชั้น 2 ห้อง HR-201"></div>
+      </div></div>
+      <div style="padding:16px 20px;border-top:1px solid var(--gray-200);display:flex;gap:10px;justify-content:flex-end"><button class="btn btn-ghost" onclick="go('tickets')">ยกเลิก</button><button class="btn btn-primary" onclick="toast('ส่งคำร้องสำเร็จ (demo)');go('tickets')">📨 ส่งคำร้องแจ้งซ่อม</button></div></div>` };
+  },
+  "assets-dash"() {
+    const total = assets.length;
+    const inUse = assets.filter(a=>a.status==="IN_USE").length;
+    const repair = assets.filter(a=>a.status==="REPAIR").length;
+    const util = Math.round(inUse/total*100);
+    const types = [...new Set(assets.map(a=>a.type))].map(ty=>({ty, n:assets.filter(a=>a.type===ty).length}));
+    const rows = types.sort((a,b)=>b.n-a.n).map((x,i)=>{const p=Math.round(x.n/total*100);return barRow(x.ty, x.n, p, BAR_COLORS[i%BAR_COLORS.length]);}).join("");
+    const statuses = [...new Set(assets.map(a=>a.status))];
+    const segs = statuses.map(s=>({label:ASSET_STATUS[s]||s, count:assets.filter(a=>a.status===s).length, color:STATUS_COLOR[s]||"#94a3b8"}));
+    const warr = assets.filter(a=>["15/03/2569","22/06/2569","28/06/2569","15/06/2569"].includes(a.warranty));
+    return { title:"ภาพรวมทรัพย์สิน IT", html:`
+      <div class="dash-hero" style="background:linear-gradient(120deg,#0f172a 0%,#0e7490 55%,#06b6d4 100%);box-shadow:0 14px 34px rgba(14,116,144,.28)">
+        <span class="hero-deco">💻</span>
+        <h2>ภาพรวมทรัพย์สิน IT 📦</h2>
+        <p>ทะเบียนทรัพย์สินและสถานะการใช้งาน · อัปเดตล่าสุด ${fmtNow()}</p>
+        <div class="hero-pills"><span class="hero-pill"><b>${util}%</b> อัตราการใช้งาน</span><span class="hero-pill"><b>${repair}</b> อยู่ระหว่างซ่อม</span><span class="hero-pill"><b>4</b> ประกันใกล้หมด</span></div>
+      </div>
+      <div class="stat-grid">${statCard("blue","📦",total,"ทรัพย์สินทั้งหมด")}${statCard("green","✅",inUse,"ใช้งานอยู่",util+"%")}${statCard("amber","⏰",4,"ประกันใกล้หมด (30 วัน)")}${statCard("red","🔧",repair,"อยู่ระหว่างซ่อม")}</div>
+      <div class="grid-2">
+        <div class="card"><div class="card-header"><div class="card-title">📊 ทรัพย์สินตามประเภท</div></div><div class="card-body">${rows}</div></div>
+        <div class="card"><div class="card-header"><div class="card-title">🍩 สัดส่วนตามสถานะ</div></div><div class="card-body">${donutChart(segs, total, "ทรัพย์สิน")}</div></div>
+      </div>
+      <div>
+        <div class="card"><div class="card-header"><div class="card-title">⚠️ ประกันใกล้หมดอายุ</div></div><div class="table-wrap"><table><thead><tr><th>Asset</th><th>อุปกรณ์</th><th>หมดประกัน</th></tr></thead><tbody>${warr.map(a=>`<tr class="clickable" onclick="go('asset-detail',${a.id})"><td class="link">${a.tag}</td><td>${esc(a.brand)} ${esc(a.model)}</td><td style="color:var(--danger);font-weight:600">${a.warranty}</td></tr>`).join("")}</tbody></table></div></div>
+      </div>` };
+  },
+  assets() {
+    const rows = assets.map(a=>`<tr class="clickable" onclick="go('asset-detail',${a.id})">
+      <td class="link">${a.tag}</td><td>${a.icon} ${esc(a.type)}</td><td>${esc(a.brand)} ${esc(a.model)}</td>
+      <td style="font-family:monospace;font-size:12px">${esc(a.serial)}</td><td>${esc(a.owner)}</td><td>${esc(a.dept)}</td>
+      <td>${sBadge(a.status)}</td><td style="font-size:12px">${a.warranty}</td></tr>`).join("");
+    return { title:"ทะเบียนทรัพย์สิน IT", html:`
+      <div class="filter-bar">
+        <input class="search-input" placeholder="ค้นหา Asset ID, ยี่ห้อ, Serial No...">
+        <select class="filter"><option>ประเภททั้งหมด</option>${[...new Set(assets.map(a=>a.type))].map(t=>`<option>${t}</option>`).join("")}</select>
+        <select class="filter"><option>สถานะทั้งหมด</option>${Object.values(ASSET_STATUS).map(v=>`<option>${v}</option>`).join("")}</select>
+        <button class="btn btn-primary btn-sm" onclick="go('asset-new')">+ เพิ่มทรัพย์สิน</button>
+      </div>
+      <div class="card"><div class="card-header"><div class="card-title">ทะเบียนทรัพย์สิน <span style="font-weight:400;color:var(--gray-500)">(${assets.length})</span></div><button class="btn btn-ghost btn-sm">📥 Export Excel</button></div>
+      <div class="table-wrap"><table><thead><tr><th>Asset ID</th><th>ประเภท</th><th>ยี่ห้อ/รุ่น</th><th>Serial No.</th><th>ผู้ครอบครอง</th><th>แผนก</th><th>สถานะ</th><th>ประกันหมด</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="pagination"><span>ทั้งหมด ${assets.length} รายการ</span></div></div>` };
+  },
+  "asset-detail"(id) {
+    const a = assets.find(x=>x.id===id) || assets[0];
+    const hist = tickets.filter(t=>t.asset===a.tag);
+    return { title:`${a.tag} — ${a.brand} ${a.model}`, html:`
+      <div class="card">
+        <div style="padding:20px;border-bottom:1px solid var(--gray-200);display:flex;gap:16px;align-items:flex-start">
+          <div style="width:60px;height:60px;background:var(--primary-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px">${a.icon}</div>
+          <div style="flex:1"><div style="font-size:12px;color:var(--gray-500);font-weight:600">${a.tag} · ${esc(a.type)}</div><div style="font-size:17px;font-weight:700;margin:4px 0">${esc(a.brand)} ${esc(a.model)}</div><div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--gray-500)">${sBadge(a.status)}<span>ผู้ครอบครอง: <b>${esc(a.owner)}</b></span><span>แผนก: <b>${esc(a.dept)}</b></span><span>${esc(a.loc)}</span></div></div>
+          <button class="btn btn-primary btn-sm" onclick="go('ticket-new')">🎫 แจ้งซ่อม</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr">
+          <div style="padding:20px;border-right:1px solid var(--gray-100)"><div style="font-size:12px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:14px">ข้อมูลอุปกรณ์</div>
+            <dl class="dl"><dt>Asset ID</dt><dd class="link">${a.tag}</dd><dt>Serial No.</dt><dd style="font-family:monospace">${esc(a.serial)}</dd><dt>Hostname</dt><dd style="font-family:monospace">${esc(a.host)}</dd><dt>IP Address</dt><dd style="font-family:monospace">${esc(a.ip)}</dd><dt>OS</dt><dd>${esc(a.os)}</dd><dt>Spec</dt><dd>${esc(a.spec)}</dd></dl></div>
+          <div style="padding:20px"><div style="font-size:12px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin-bottom:14px">การจัดซื้อ & ประกัน</div>
+            <dl class="dl"><dt>ราคา</dt><dd>฿${a.price.toLocaleString()}</dd><dt>ผู้จำหน่าย</dt><dd>${esc(a.vendor)}</dd><dt>เลขที่ PO</dt><dd>${esc(a.po)}</dd><dt>ประกันหมด</dt><dd>${a.warranty}</dd><dt>สถานที่</dt><dd>${esc(a.loc)}</dd></dl></div>
+        </div>
+        <div style="padding:0 20px 20px"><div style="font-size:12px;font-weight:700;color:var(--gray-500);text-transform:uppercase;margin:16px 0 12px">ประวัติการแจ้งซ่อม</div>
+          <table><thead><tr><th>Ticket ID</th><th>ปัญหา</th><th>วันที่</th><th>สถานะ</th></tr></thead><tbody>${hist.length?hist.map(t=>`<tr class="clickable" onclick="go('ticket-detail',${t.id})"><td class="link">${t.no}</td><td>${esc(t.subject)}</td><td>11/06/2569</td><td>${sBadge(t.status)}</td></tr>`).join(""):'<tr><td colspan="4"><div class="empty">ยังไม่มีประวัติแจ้งซ่อม</div></td></tr>'}</tbody></table></div>
+      </div>` };
+  },
+  "asset-new"() {
+    return { title:"เพิ่มทรัพย์สิน", html:`
+      <div class="card" style="max-width:820px"><div class="card-header"><div class="card-title">➕ เพิ่มทรัพย์สิน IT</div></div>
+      <div class="card-body"><div class="form-grid">
+        ${fld("Asset ID","PC-HR-003",1)}<div class="form-group"><label>ประเภท <span class="req">*</span></label><select>${[...new Set(assets.map(a=>a.type))].map(t=>`<option>${t}</option>`).join("")}</select></div>
+        ${fld("ยี่ห้อ","Dell, HP, Apple",1)}${fld("รุ่น","OptiPlex 7090",1)}${fld("Serial Number","")}${fld("Hostname","")}
+        <div class="form-group full"><label>Specification</label><input placeholder="i5-11500, 16GB, SSD 512GB, Win11 Pro"></div>
+        ${fld("IP Address","192.168.x.x")}${fld("MAC Address","")}${fld("สถานที่ตั้ง","ชั้น 2 ห้อง HR-201")}
+        <div class="form-group"><label>สถานะ <span class="req">*</span></label><select>${Object.values(ASSET_STATUS).map(v=>`<option>${v}</option>`).join("")}</select></div>
+        <div class="form-group"><label>วันที่ซื้อ</label><input type="date"></div>${fld("ราคา (บาท)","0.00")}<div class="form-group"><label>วันหมดประกัน</label><input type="date"></div>${fld("ผู้จำหน่าย","")}
+      </div></div>
+      <div style="padding:16px 20px;border-top:1px solid var(--gray-200);display:flex;gap:10px;justify-content:flex-end"><button class="btn btn-ghost" onclick="go('assets')">ยกเลิก</button><button class="btn btn-primary" onclick="toast('บันทึกสำเร็จ (demo)');go('assets')">💾 บันทึก</button></div></div>` };
+  },
+  users() {
+    const u = [["ผู้ดูแลระบบ","admin@company.local","ADMIN","IT"],["วิชัย ช่าง","wichai@company.local","AGENT","IT"],["สมชาย IT","somchai@company.local","AGENT","IT"],["สมหญิง วงษ์ดี","somying@company.local","USER","HR"],["มานี รักดี","manee@company.local","USER","บัญชี/การเงิน"],["ประสิทธิ์ มั่นคง","prasit@company.local","USER","ฝ่ายขาย"]];
+    const R={ADMIN:"ผู้ดูแลระบบ",AGENT:"เจ้าหน้าที่ IT",USER:"ผู้ใช้งาน"};
+    return { title:"จัดการผู้ใช้งาน", html:`<div class="card"><div class="card-header"><div class="card-title">ผู้ใช้งาน (${u.length})</div><button class="btn btn-primary btn-sm">+ เพิ่มผู้ใช้</button></div>
+      <div class="table-wrap"><table><thead><tr><th>ชื่อ / อีเมล</th><th>บทบาท</th><th>แผนก</th><th>สถานะ</th></tr></thead><tbody>${u.map(x=>`<tr><td><div style="font-weight:500">${x[0]}</div><div style="font-size:11.5px;color:var(--gray-500)">${x[1]}</div></td><td>${R[x[2]]}</td><td>${x[3]}</td><td><span class="badge b-IN_USE">ใช้งาน</span></td></tr>`).join("")}</tbody></table></div></div>` };
+  },
+  // ═══ Service Catalog ═══
+  catalog() {
+    const tiles = catalog.map((c,i)=>`<div class="cat-tile" onclick="go('ticket-new')">
+      <div style="font-size:32px">${c.icon}</div>
+      <div style="font-weight:600;margin-top:8px">${esc(c.name)}</div>
+      <div style="font-size:12px;color:var(--gray-500);margin-top:4px">${esc(c.desc)}</div>
+      ${c.approval?'<div class="chip amber" style="margin-top:8px">ต้องอนุมัติ</div>':'<div class="chip green" style="margin-top:8px">อัตโนมัติ</div>'}
+    </div>`).join("");
+    return { title:"Service Catalog — แคตตาล็อกบริการ", html:`
+      <div class="card"><div class="card-body">
+        <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">เลือกบริการที่ต้องการขอ — ระบบจะสร้างคำขอและส่งเข้ากระบวนการอนุมัติ (ถ้าจำเป็น) โดยอัตโนมัติ</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">${tiles}</div>
+      </div></div>` };
+  },
+  // ═══ งานรออนุมัติ ═══
+  approvals() {
+    const rows = approvals.map(a=>`<tr>
+      <td class="link clickable" onclick="go('ticket-detail',5)">${a.ticketNo}</td>
+      <td>${esc(a.subject)}</td><td><span class="chip blue">คำขอบริการ</span></td>
+      <td>${esc(a.requester)}</td><td style="font-size:12px">${a.date}</td>
+      <td><button class="btn btn-primary btn-sm" onclick="toast('อนุมัติแล้ว (demo)')">✓ อนุมัติ</button>
+          <button class="btn btn-ghost btn-sm" onclick="toast('ปฏิเสธแล้ว (demo)')">✗ ปฏิเสธ</button></td></tr>`).join("");
+    return { title:"งานรออนุมัติ (Approvals)", html:`
+      <div class="card"><div class="card-header"><div class="card-title">รายการรออนุมัติของฉัน <span style="font-weight:400;color:var(--gray-500)">(${approvals.length})</span></div></div>
+      <div class="table-wrap"><table><thead><tr><th>เลขที่</th><th>เรื่อง</th><th>ประเภท</th><th>ผู้ขอ</th><th>วันที่</th><th>การดำเนินการ</th></tr></thead><tbody>${rows||'<tr><td colspan="6"><div class="empty">ไม่มีงานรออนุมัติ</div></td></tr>'}</tbody></table></div></div>` };
+  },
+  // ═══ Knowledge Base ═══
+  kb() {
+    const tiles = kbCats.map(c=>`<div class="cat-tile"><div style="font-size:28px">${c.icon}</div><div style="font-weight:600;margin-top:6px;font-size:13px">${esc(c.name)}</div><div style="font-size:11px;color:var(--gray-500)">${kbArticles.filter(a=>a.cat===c.name).length} บทความ</div></div>`).join("");
+    const list = kbArticles.map(a=>`<div class="kb-card" onclick="go('kb-article',${a.id})">
+      <div style="font-weight:600;font-size:14px;color:var(--primary)">${esc(a.title)}</div>
+      <div style="font-size:12.5px;color:var(--gray-600);margin:6px 0">${esc(a.summary)}</div>
+      <div style="display:flex;gap:8px;align-items:center;font-size:11px;color:var(--gray-400)"><span class="chip">${esc(a.cat)}</span><span>👁 ${a.views} ครั้ง</span></div>
+    </div>`).join("");
+    return { title:"Knowledge Base — คลังความรู้", html:`
+      <div class="filter-bar"><input class="search-input" placeholder="🔍 ค้นหาบทความ วิธีแก้ปัญหา..."><button class="btn btn-primary btn-sm" onclick="toast('ฟอร์มเขียนบทความ (demo)')">+ เขียนบทความ</button></div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px">${tiles}</div>
+      <div class="card"><div class="card-header"><div class="card-title">บทความล่าสุด</div></div><div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">${list}</div></div>` };
+  },
+  "kb-article"(id) {
+    const a = kbArticles.find(x=>x.id===id)||kbArticles[0];
+    return { title:a.title, html:`
+      <div class="card" style="max-width:820px"><div class="card-body">
+        <div style="font-size:12px;color:var(--gray-500)"><span class="link clickable" onclick="go('kb')">← คลังความรู้</span> / ${esc(a.cat)}</div>
+        <h1 style="font-size:22px;margin:10px 0">${esc(a.title)}</h1>
+        <div style="display:flex;gap:10px;font-size:11.5px;color:var(--gray-400);margin-bottom:16px">${(a.tags||"").split(",").map(t=>`<span class="chip">${esc(t.trim())}</span>`).join("")} <span>👁 ${a.views} ครั้ง</span></div>
+        <div style="font-size:14px;line-height:1.8;white-space:pre-wrap;border-top:1px solid var(--gray-200);padding-top:16px">${esc(a.body)}</div>
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gray-200);font-size:13px;color:var(--gray-500)">บทความนี้ช่วยได้ไหม? <button class="btn btn-ghost btn-sm" onclick="toast('ขอบคุณ!')">👍 ใช่</button> <button class="btn btn-ghost btn-sm" onclick="go('ticket-new')">👎 แจ้ง IT</button></div>
+      </div></div>` };
+  },
+  // ═══ Software License ═══
+  licenses() {
+    const rows = licenses.map(l=>{const pct=Math.round(l.used/l.total*100);const col=pct>=90?'var(--danger)':pct>=70?'var(--warning)':'var(--success)';return `<tr class="clickable" onclick="toast('รายละเอียด ${esc(l.name)} (demo)')">
+      <td><div style="font-weight:500">${esc(l.name)}</div><div style="font-size:11.5px;color:var(--gray-500)">${esc(l.publisher)}</div></td>
+      <td style="min-width:140px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>${l.used}/${l.total} seats</span><span style="color:${col};font-weight:600">${pct}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${col}"></div></div></td>
+      <td>${l.total-l.used} ว่าง</td><td style="font-size:12px">${l.expiry}</td><td>฿${l.cost.toLocaleString()}</td></tr>`;}).join("");
+    return { title:"Software License", html:`
+      <div class="filter-bar"><input class="search-input" placeholder="ค้นหา license..."><button class="btn btn-primary btn-sm" onclick="toast('ฟอร์มเพิ่ม license (demo)')">+ เพิ่ม License</button></div>
+      <div class="card"><div class="card-header"><div class="card-title">License ทั้งหมด (${licenses.length})</div></div>
+      <div class="table-wrap"><table><thead><tr><th>ซอฟต์แวร์</th><th>การใช้งาน (Seats)</th><th>คงเหลือ</th><th>หมดอายุ</th><th>มูลค่า</th></tr></thead><tbody>${rows}</tbody></table></div></div>` };
+  },
+  // ═══ Vendor ═══
+  vendors() {
+    const rows = vendors.map(v=>`<tr class="clickable" onclick="toast('รายละเอียด ${esc(v.name)} (demo)')">
+      <td style="font-weight:500">${esc(v.name)}</td><td>${esc(v.contact)}</td><td style="font-size:12px">${esc(v.phone)}</td><td style="font-size:12px">${esc(v.email)}</td>
+      <td><span class="chip blue">${v.assets} assets</span></td><td><span class="chip">${v.contracts} สัญญา</span></td></tr>`).join("");
+    return { title:"ผู้จำหน่าย (Vendors)", html:`
+      <div class="filter-bar"><input class="search-input" placeholder="ค้นหาผู้จำหน่าย..."><button class="btn btn-primary btn-sm" onclick="toast('ฟอร์มเพิ่มผู้จำหน่าย (demo)')">+ เพิ่มผู้จำหน่าย</button></div>
+      <div class="card"><div class="card-header"><div class="card-title">ผู้จำหน่ายทั้งหมด (${vendors.length})</div></div>
+      <div class="table-wrap"><table><thead><tr><th>ชื่อบริษัท</th><th>ผู้ติดต่อ</th><th>โทรศัพท์</th><th>อีเมล</th><th>ทรัพย์สิน</th><th>สัญญา</th></tr></thead><tbody>${rows}</tbody></table></div></div>` };
+  },
+  // ═══ Contract ═══
+  contracts() {
+    const rows = contracts.map(c=>`<tr class="clickable" onclick="toast('รายละเอียดสัญญา ${c.no} (demo)')">
+      <td class="link">${c.no}</td><td>${esc(c.name)}</td><td><span class="chip">${CONTRACT_TYPE[c.type]}</span></td>
+      <td>${esc(c.vendor)}</td><td style="font-size:12px;color:var(--warning);font-weight:600">${c.end}</td><td>฿${c.value.toLocaleString()}</td></tr>`).join("");
+    return { title:"สัญญา / ประกัน (Contracts)", html:`
+      <div class="filter-bar"><input class="search-input" placeholder="ค้นหาสัญญา..."><select class="filter"><option>ทุกประเภท</option>${Object.values(CONTRACT_TYPE).map(v=>`<option>${v}</option>`).join("")}</select><button class="btn btn-primary btn-sm" onclick="toast('ฟอร์มเพิ่มสัญญา (demo)')">+ เพิ่มสัญญา</button></div>
+      <div class="card"><div class="card-header"><div class="card-title">สัญญาทั้งหมด (${contracts.length})</div></div>
+      <div class="table-wrap"><table><thead><tr><th>เลขที่สัญญา</th><th>ชื่อสัญญา</th><th>ประเภท</th><th>ผู้จำหน่าย</th><th>สิ้นสุด</th><th>มูลค่า</th></tr></thead><tbody>${rows}</tbody></table></div></div>` };
+  },
+  // ═══ Reports ═══
+  reports() {
+    const byAgent = [["วิชัย ช่าง",2],["สมชาย IT",2]];
+    return { title:"รายงาน & วิเคราะห์", html:`
+      <div class="filter-bar">
+        <input type="date" style="max-width:160px"><span style="color:var(--gray-400)">ถึง</span><input type="date" style="max-width:160px">
+        <button class="btn btn-ghost btn-sm" onclick="toast('ดาวน์โหลด tickets.csv (demo)')">📥 Export Ticket (CSV)</button>
+        <button class="btn btn-ghost btn-sm" onclick="toast('ดาวน์โหลด assets.csv (demo)')">📥 Export Asset (CSV)</button>
+      </div>
+      <div class="kpi-grid">${kpi("blue","🎫",6,"Ticket ทั้งหมด")}${kpi("green","🎯",83,"SLA Compliance (%)")}${kpi("yellow","⭐",5.0,"คะแนนพึงพอใจเฉลี่ย")}${kpi("red","🚨",1,"เกิน SLA")}</div>
+      <div class="grid-2">
+        <div class="card"><div class="card-header"><div class="card-title">📊 แยกตามประเภท</div></div><div class="card-body">
+          <div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span>🔧 Incident (แจ้งซ่อม)</span><span style="font-weight:600">4 (67%)</span></div><div class="progress-bar"><div class="progress-fill" style="width:67%"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span>🛒 Service Request (คำขอ)</span><span style="font-weight:600">2 (33%)</span></div><div class="progress-bar"><div class="progress-fill" style="width:33%;background:#8b5cf6"></div></div></div>
+        </div></div>
+        <div class="card"><div class="card-header"><div class="card-title">👷 ภาระงานเจ้าหน้าที่</div></div><div class="card-body">${byAgent.map(a=>`<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--gray-100)"><span>${a[0]}</span><span class="chip blue">${a[1]} งาน</span></div>`).join("")}</div></div>
+      </div>
+      <div class="card"><div class="card-header"><div class="card-title">📈 แนวโน้ม Ticket รายเดือน</div></div><div class="card-body" style="display:flex;align-items:flex-end;gap:14px;height:160px">
+        ${[["ม.ค.",12],["ก.พ.",18],["มี.ค.",15],["เม.ย.",22],["พ.ค.",19],["มิ.ย.",24]].map(m=>`<div style="flex:1;text-align:center"><div style="background:var(--primary);border-radius:4px 4px 0 0;height:${m[1]*4}px;margin-bottom:6px" title="${m[1]}"></div><div style="font-size:11px;color:var(--gray-500)">${m[0]}</div><div style="font-size:11px;font-weight:600">${m[1]}</div></div>`).join("")}
+      </div></div>` };
+  },
+  // ═══ Settings ═══
+  settings() {
+    const DAYS=["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์"];
+    const hours=DAYS.map((d,i)=>`<tr><td>${d}</td><td>${i>=1&&i<=5?'<span class="chip green">ทำการ</span>':'<span class="chip">หยุด</span>'}</td><td>${i>=1&&i<=5?'08:30 - 17:30':'—'}</td></tr>`).join("");
+    const sla=[["🔴 วิกฤต","15 นาที","4 ชม."],["🟠 สูง","30 นาที","8 ชม."],["🟡 กลาง","1 ชม.","1 วัน"],["🟢 ต่ำ","4 ชม.","2 วัน"]];
+    return { title:"ตั้งค่าระบบ", html:`
+      <div class="grid-2">
+        <div class="card"><div class="card-header"><div class="card-title">⏱️ SLA Policy</div></div><div class="table-wrap"><table><thead><tr><th>ความสำคัญ</th><th>ตอบสนอง</th><th>แก้ไข</th></tr></thead><tbody>${sla.map(s=>`<tr><td>${s[0]}</td><td>${s[1]}</td><td>${s[2]}</td></tr>`).join("")}</tbody></table></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">🕐 เวลาทำการ (Business Hours)</div></div><div class="table-wrap"><table><thead><tr><th>วัน</th><th>สถานะ</th><th>เวลา</th></tr></thead><tbody>${hours}</tbody></table></div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="card-header"><div class="card-title">🏷️ หมวดหมู่ปัญหา</div><button class="btn btn-ghost btn-sm">+ เพิ่ม</button></div><div class="card-body" style="display:flex;flex-wrap:wrap;gap:8px">${["💻 Hardware","🪟 Software / OS","🌐 Network","🖨️ Printer","🔑 Account","📧 Email","🔒 Security"].map(c=>`<span class="chip blue">${c}</span>`).join("")}</div></div>
+        <div class="card"><div class="card-header"><div class="card-title">📍 สถานที่ / สาขา</div><button class="btn btn-ghost btn-sm">+ เพิ่ม</button></div><div class="card-body" style="display:flex;flex-direction:column;gap:8px">${[["สำนักงานใหญ่ (กรุงเทพ)",142],["โรงงานสมุทรปราการ",28],["คลังอะไหล่/สำรอง",16]].map(l=>`<div style="display:flex;justify-content:space-between;font-size:13px"><span>📍 ${l[0]}</span><span class="chip">${l[1]} assets</span></div>`).join("")}</div></div>
+      </div>` };
+  },
+  // ═══ Audit Log ═══
+  audit() {
+    const rows = auditLog.map(a=>`<tr><td style="font-size:12px;color:var(--gray-500)">${a.time}</td><td>${esc(a.user)}</td><td><span class="chip">${a.action}</span></td><td style="font-size:12px">${esc(a.entity)}</td><td style="font-family:monospace;font-size:12px;color:var(--gray-500)">${a.ip}</td></tr>`).join("");
+    return { title:"Audit Log — บันทึกการใช้งาน", html:`
+      <div class="filter-bar"><input class="search-input" placeholder="ค้นหา action..."><select class="filter"><option>ทุกประเภท</option><option>Ticket</option><option>Asset</option><option>User</option></select></div>
+      <div class="card"><div class="card-header"><div class="card-title">บันทึกล่าสุด</div></div>
+      <div class="table-wrap"><table><thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>การกระทำ</th><th>รายการ</th><th>IP</th></tr></thead><tbody>${rows}</tbody></table></div></div>` };
+  },
+};
+function kvRow(k,v){ return `<div style="display:flex;justify-content:space-between"><span style="color:var(--gray-500)">${esc(k)}</span><span style="font-weight:500">${esc(v||"—")}</span></div>`; }
+function fld(label,ph,req){ return `<div class="form-group"><label>${label}${req?' <span class="req">*</span>':''}</label><input placeholder="${esc(ph)}"></div>`; }
+
+// ───────── router ─────────
+const TITLES = { helpdesk:"Dashboard", tickets:"รายการแจ้งซ่อม", "ticket-new":"แจ้งซ่อมใหม่", "ticket-detail":"รายละเอียด Ticket", "assets-dash":"ภาพรวมทรัพย์สิน", assets:"รายการทรัพย์สิน", "asset-new":"เพิ่มทรัพย์สิน", "asset-detail":"รายละเอียดทรัพย์สิน", users:"ผู้ใช้งาน", catalog:"Service Catalog", approvals:"งานรออนุมัติ", kb:"Knowledge Base", "kb-article":"บทความ", licenses:"Software License", vendors:"ผู้จำหน่าย", contracts:"สัญญา/ประกัน", reports:"รายงาน", settings:"ตั้งค่าระบบ", audit:"Audit Log" };
+function go(route, param) {
+  const r = Pages[route] ? route : "helpdesk";
+  const out = Pages[r](param);
+  document.getElementById("content").innerHTML = out.html;
+  document.getElementById("page-title").textContent = out.title;
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.route === r));
+  window.scrollTo(0,0);
+}
+function enterApp() {
+  document.getElementById("login-view").classList.add("hidden");
+  document.getElementById("app-view").classList.remove("hidden");
+  go("helpdesk");
+}
+function logout() {
+  document.getElementById("app-view").classList.add("hidden");
+  document.getElementById("login-view").classList.remove("hidden");
+}
+document.querySelectorAll(".nav-item").forEach(n => n.addEventListener("click", () => go(n.dataset.route)));
+</script>
+</body>
+</html>

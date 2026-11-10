@@ -1,0 +1,16 @@
+node_modules/
+.env
+uploads/
+logs/
+*.log
+.DS_Store
+dist/
+# ไฟล์ dump/zip มีข้อมูลจริงทั้งฐาน ห้ามเข้า git เด็ดขาด
+.backups/
+*.dump
+# ภาพ screenshot ที่ browser test เขียนลง root
+ticket-asset-modes-*.png
+dashboard-chart-*.png
+# ตั้งค่า Claude Code ประจำเครื่อง — มีประวัติคำสั่งที่อาจมีรหัสผ่านจริง
+.claude/settings*.json
+.claude/launch.json

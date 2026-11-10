@@ -1,0 +1,143 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IT Service Desk</title>
+  <!-- โหลดฟอนต์ไทยน้ำหนักที่ใช้บ่อยที่สุดก่อน ลดอาการตัวหนังสือกระพริบตอนเปลี่ยนฟอนต์ -->
+  <link rel="preload" href="/fonts/prompt-400-thai.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/prompt-600-thai.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/fonts.css?v=20260910-6">
+  <link rel="stylesheet" href="/css/app.css?v=20260910-6">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
+</head>
+<body>
+  <!-- Login -->
+  <div id="login-view" class="login-wrap hidden">
+    <form class="login-card" id="login-form">
+      <div class="login-logo">
+        <div class="t">🖥️ IT Service Desk</div>
+        <div class="s">ระบบแจ้งซ่อม IT และทะเบียนทรัพย์สิน</div>
+      </div>
+      <div id="login-error" class="login-error hidden"></div>
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="auth-login-tab">เข้าสู่ระบบ</button>
+        <button type="button" class="auth-tab" id="auth-register-tab">ลงทะเบียนครั้งแรก</button>
+      </div>
+      <div class="form-group auth-register-field hidden" style="margin-bottom:14px">
+        <label>ชื่อ-สกุล</label>
+        <input type="text" id="register-full-name" placeholder="ชื่อพนักงาน" autocomplete="name">
+      </div>
+      <div class="form-group auth-register-field hidden" style="margin-bottom:14px">
+        <label>ชื่อผู้ใช้</label>
+        <input type="text" id="register-username" placeholder="เช่น panwadee@2569" autocomplete="username">
+        <span class="form-hint">ตั้งชื่อที่จำง่าย 3-40 ตัว ห้ามเว้นวรรค</span>
+      </div>
+      <div class="form-group auth-login-field" style="margin-bottom:14px">
+        <label id="login-email-label">ชื่อผู้ใช้ / อีเมล</label>
+        <input type="text" id="login-email" placeholder="ชื่อผู้ใช้หรืออีเมล" autocomplete="username">
+      </div>
+      <div class="form-group auth-register-field hidden" style="margin-bottom:14px">
+        <label>แผนก</label>
+        <select id="register-department"><option value="">— ไม่ระบุ —</option></select>
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <label>รหัสผ่าน</label>
+        <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <div class="form-group auth-register-field hidden" style="margin-bottom:20px">
+        <label>ยืนยันรหัสผ่าน</label>
+        <input type="password" id="register-confirm-password" placeholder="••••••••" autocomplete="new-password">
+        <span class="form-hint">รหัสผ่านอย่างน้อย 8 ตัว มีตัวพิมพ์เล็ก ตัวพิมพ์ใหญ่ และตัวเลข</span>
+      </div>
+      <div class="form-group hidden" id="login-totp-group" style="margin-bottom:20px">
+        <label>รหัสยืนยัน 2 ชั้น (6 หลักจากแอป Authenticator)</label>
+        <input type="text" id="login-totp" placeholder="123456" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="login-btn">เข้าสู่ระบบ</button>
+    </form>
+  </div>
+
+  <!-- App shell -->
+  <div id="app-view" class="app hidden">
+    <div class="nav-scrim" id="nav-scrim"></div>
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="t">🖥️ IT Service Desk</div>
+        <div class="s" id="org-name">บริษัท ตัวอย่าง จำกัด</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">แจ้งซ่อม / บริการ</div>
+        <div class="nav-item" data-route="helpdesk"><span class="icon">📊</span> Dashboard</div>
+        <div class="nav-item" data-route="tickets"><span class="icon">🎫</span> รายการแจ้งซ่อม<span class="nav-badge hidden" id="tickets-badge">0</span></div>
+        <div class="nav-item" data-route="ticket-new"><span class="icon">➕</span> แจ้งซ่อม / ขอบริการ</div>
+        <div class="nav-item" data-route="catalog"><span class="icon">🛒</span> Service Catalog</div>
+        <div class="nav-item" data-route="approvals"><span class="icon">✅</span> งานรออนุมัติ</div>
+        <div class="nav-item" data-route="problems" data-roles="ADMIN,MANAGER,AGENT"><span class="icon">🧩</span> Problem</div>
+        <div class="nav-item" data-route="changes" data-roles="ADMIN,MANAGER,AGENT"><span class="icon">🔁</span> Change</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Knowledge Base</div>
+        <div class="nav-item" data-route="kb"><span class="icon">📚</span> คลังความรู้</div>
+      </div>
+      <div class="sidebar-section" data-roles="ADMIN,AGENT">
+        <div class="sidebar-label">ทรัพย์สิน IT</div>
+        <div class="nav-item" data-route="assets-dash"><span class="icon">📦</span> ภาพรวมทรัพย์สิน</div>
+        <div class="nav-item" data-route="assets"><span class="icon">🗄️</span> รายการทรัพย์สิน</div>
+        <div class="nav-item" data-route="asset-new"><span class="icon">➕</span> เพิ่มทรัพย์สิน</div>
+        <div class="nav-item" data-route="stocktake"><span class="icon">🔎</span> ตรวจนับทรัพย์สิน</div>
+        <div class="nav-item" data-route="licenses"><span class="icon">📄</span> Software License</div>
+        <div class="nav-item" data-route="vendors"><span class="icon">🏢</span> ผู้จำหน่าย</div>
+        <div class="nav-item" data-route="contracts"><span class="icon">📋</span> สัญญา/ประกัน</div>
+        <div class="nav-item" data-route="depreciation"><span class="icon">📉</span> รายงานค่าเสื่อม</div>
+      </div>
+      <div class="sidebar-section" data-roles="ADMIN,MANAGER,AGENT">
+        <div class="sidebar-label">รายงาน & ผู้ดูแล</div>
+        <div class="nav-item" data-route="reports"><span class="icon">📈</span> รายงาน & วิเคราะห์</div>
+        <div class="nav-item" data-route="users" data-roles="ADMIN,AGENT"><span class="icon">👥</span> ผู้ใช้งาน</div>
+        <div class="nav-item" data-route="teams" data-roles="ADMIN,AGENT"><span class="icon">👨‍👩‍👧</span> ทีม / คิวงาน</div>
+        <div class="nav-item" data-route="settings" data-roles="ADMIN,AGENT"><span class="icon">⚙️</span> ตั้งค่าระบบ</div>
+        <div class="nav-item" data-route="audit" data-roles="ADMIN"><span class="icon">📜</span> Audit Log</div>
+        <div class="nav-item" data-route="account"><span class="icon">👤</span> บัญชีของฉัน</div>
+      </div>
+      <div class="sidebar-user">
+        <div class="avatar" id="user-avatar">?</div>
+        <div class="info">
+          <div class="name" id="user-name">—</div>
+          <div class="role" id="user-role">—</div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="main">
+      <div class="topbar">
+        <button class="nav-toggle" id="nav-toggle" aria-label="เปิด/ปิดเมนู" aria-expanded="false">☰</button>
+        <div>
+          <div class="bc">IT Service Management</div>
+          <div class="tt" id="page-title">Dashboard</div>
+        </div>
+        <div class="topbar-right">
+          <div class="global-search">
+            <span class="gs-ic">🔍</span>
+            <input type="text" id="global-search" placeholder="ค้นหา Ticket, ทรัพย์สิน, ความรู้..." autocomplete="off">
+            <div class="gs-results hidden" id="gs-results"></div>
+          </div>
+          <button class="lang-toggle" id="lang-toggle" title="ภาษา / Language">EN</button>
+          <button class="theme-toggle" id="theme-toggle" title="โหมดมืด/สว่าง">🌙</button>
+          <span class="notif-bell" id="notif-bell" title="การแจ้งเตือน">🔔<span class="dot hidden" id="notif-dot">0</span>
+            <div class="notif-panel hidden" id="notif-panel"></div>
+          </span>
+          <button class="btn btn-ghost btn-sm" id="logout-btn">ออกจากระบบ</button>
+        </div>
+      </div>
+      <div class="content" id="content"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <script src="/js/api.js?v=20261110-1"></script>
+  <script src="/js/ui.js?v=20261110-1"></script>
+  <script src="/js/barcode.js?v=20261110-1"></script>
+  <script src="/js/pages.js?v=20261110-1"></script>
+  <script src="/js/app.js?v=20261110-1"></script>
+</body>
+</html>

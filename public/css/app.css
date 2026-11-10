@@ -1,0 +1,542 @@
+﻿:root {
+  /* ฟอนต์หลักทั้งระบบ — ทุกที่ใช้ผ่านตัวแปรนี้ ไม่ประกาศชื่อฟอนต์ซ้ำที่อื่น */
+  --font-sans: 'Prompt', 'Segoe UI', 'Leelawadee UI', -apple-system, system-ui, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+  --primary: #2563eb; --primary-dark: #1d4ed8; --primary-light: #dbeafe;
+  --success: #16a34a; --success-light: #dcfce7;
+  --warning: #d97706; --warning-light: #fef3c7;
+  --danger: #dc2626; --danger-light: #fee2e2;
+  --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; --gray-300: #d1d5db;
+  --gray-400: #9ca3af; --gray-500: #6b7280; --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937;
+  --sidebar-w: 240px;
+
+  /* มุมโค้ง — ใช้ 3 ระดับทั้งระบบ ไม่ตั้งค่าเฉพาะจุด */
+  --r-sm: 6px; --r-md: 10px; --r-lg: 14px;
+  /* เงา — อ่อน ใช้บอกระดับความสูง ไม่ใช่เพื่อความหวือหวา */
+  --sh-1: 0 1px 2px rgba(15,23,42,.05);
+  --sh-2: 0 1px 3px rgba(15,23,42,.07), 0 4px 12px rgba(15,23,42,.04);
+  --sh-3: 0 8px 28px rgba(15,23,42,.12);
+  --ring: 0 0 0 3px rgba(37,99,235,.14);
+  --line: var(--gray-200);
+  --page-bg: #f6f7f9;
+
+  /* ─── สีสำหรับกราฟ (ผ่านการตรวจ contrast/CVD แล้ว) ───
+     กราฟชุดข้อมูลเดียว = สีเดียว ไม่สุ่มสีต่อกราฟ */
+  --c-series-1: #2a78d6;   /* น้ำเงิน — ค่าเริ่มต้นของทุกกราฟแท่ง */
+  --c-series-2: #1baf7a;   /* เขียวอมฟ้า — ใช้เมื่อมี 2 ชุดข้อมูล */
+  --c-track: var(--gray-100);
+  /* สถานะความรุนแรง — ใช้เป็นจุดเล็กคู่ข้อความเสมอ ไม่ใช้สีสื่อความหมายลำพัง */
+  --c-critical: #d03b3b; --c-serious: #eb6834; --c-warning: #eda100; --c-good: #0ca30c;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  /* Prompt มีสระบน/ล่างสูงกว่า Segoe UI — ต้องเผื่อระยะบรรทัด ไม่งั้นวรรณยุกต์ชนกัน */
+  line-height: 1.5;
+  background: var(--page-bg); color: var(--gray-800);
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
+a { color: inherit; text-decoration: none; }
+.hidden { display: none !important; }
+
+/* ─── Login ─── */
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e293b, #2563eb); }
+.login-card { background: #fff; border-radius: 14px; padding: 36px; width: 380px; box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+.login-logo { text-align: center; margin-bottom: 24px; }
+.login-logo .t { font-size: 20px; font-weight: 700; color: var(--gray-800); }
+.login-logo .s { font-size: 13px; color: var(--gray-500); margin-top: 4px; }
+.login-error { background: var(--danger-light); color: var(--danger); padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 16px; background: var(--gray-100); border-radius: 8px; padding: 4px; }
+.auth-tab { border: 0; background: transparent; border-radius: 6px; padding: 7px 8px; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--gray-600); cursor: pointer; }
+.auth-tab.active { background: #fff; color: var(--primary); box-shadow: 0 1px 4px rgba(15,23,42,.12); }
+
+/* ─── Layout ─── */
+.app { display: flex; min-height: 100vh; }
+.sidebar { width: var(--sidebar-w); background: #111827; color: #e2e8f0; display: flex; flex-direction: column; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; }
+.sidebar-logo { padding: 18px 18px; border-bottom: 1px solid rgba(255,255,255,.07); }
+.sidebar-logo .t { font-size: 14.5px; font-weight: 700; color: #fff; letter-spacing: -.01em; }
+.sidebar-logo .s { font-size: 11px; color: #7c8899; margin-top: 3px; }
+.sidebar-section { padding: 14px 0 4px; }
+.sidebar-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #7c8899; padding: 0 18px 8px; }
+/* แถบสีด้านซ้ายบอกรายการที่เลือก — ไม่ต้องถมสีทั้งแถว */
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 18px; cursor: pointer; font-size: 13.5px;
+  color: #b6c0cd; position: relative; transition: background .13s, color .13s;
+}
+.nav-item::before {
+  content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px;
+  border-radius: 0 3px 3px 0; background: transparent; transition: background .13s;
+}
+.nav-item:hover { background: rgba(255,255,255,.05); color: #fff; }
+.nav-item.active { background: rgba(59,130,246,.14); color: #fff; font-weight: 600; }
+.nav-item.active::before { background: #60a5fa; }
+.nav-item .icon { width: 18px; text-align: center; font-size: 14px; opacity: .85; }
+.nav-item.active .icon { opacity: 1; }
+.nav-item .badge-count, .nav-badge { margin-left: auto; background: #dc2626; color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 600; }
+.chip { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 11.5px; font-weight: 500; background: var(--gray-100); color: var(--gray-600); }
+.chip.blue { background: var(--primary-light); color: var(--primary-dark); }
+.chip.green { background: var(--success-light); color: var(--success); }
+.chip.amber { background: var(--warning-light); color: #92400e; }
+.priority-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: -1px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+.priority-dot.red { background: var(--danger); }
+.priority-dot.orange { background: #f97316; }
+.priority-dot.yellow { background: #eab308; }
+.priority-dot.green { background: var(--success); }
+.kb-card { border: 1px solid var(--gray-200); border-radius: 10px; padding: 16px; cursor: pointer; transition: box-shadow .15s, border-color .15s; }
+.kb-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.06); border-color: var(--primary); }
+.cat-tile { border: 1px solid var(--gray-200); border-radius: 10px; padding: 18px; text-align: center; cursor: pointer; transition: box-shadow .15s, transform .1s; }
+.cat-tile:hover { box-shadow: 0 6px 16px rgba(0,0,0,.08); transform: translateY(-2px); border-color: var(--primary); }
+.notif-bell { position: relative; cursor: pointer; font-size: 18px; }
+.notif-bell .dot { position: absolute; top: -4px; right: -6px; background: #dc2626; color: #fff; font-size: 9px; padding: 0 4px; border-radius: 8px; }
+.notif-panel { position: absolute; top: 44px; right: 0; width: 320px; background: #fff; border: 1px solid var(--gray-200); border-radius: 10px; box-shadow: 0 12px 32px rgba(0,0,0,.15); z-index: 200; max-height: 400px; overflow-y: auto; }
+.notif-item { padding: 12px 14px; border-bottom: 1px solid var(--gray-100); font-size: 13px; cursor: pointer; }
+.notif-item:hover { background: var(--gray-50); }
+.notif-item.unread { background: #eff6ff; }
+.sidebar-user { margin-top: auto; padding: 14px 18px; border-top: 1px solid rgba(255,255,255,.07); display: flex; align-items: center; gap: 10px; }
+.sidebar-user .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.sidebar-user .info { min-width: 0; }
+.sidebar-user .info .name { font-size: 13px; font-weight: 600; color: #e8edf3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-user .info .role { font-size: 11px; color: #7c8899; }
+
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { background: rgba(255,255,255,.86); backdrop-filter: saturate(180%) blur(8px); border-bottom: 1px solid var(--line); padding: 0 24px; height: 58px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 50; }
+.topbar .bc { font-size: 11.5px; color: var(--gray-400); letter-spacing: .02em; }
+.topbar .tt { font-size: 16px; font-weight: 700; letter-spacing: -.015em; margin-top: 1px; }
+.topbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+/* ปุ่มบนแถบบนสูงเท่ากันหมด */
+.topbar-right > .btn, .topbar-right > .theme-toggle, .topbar-right > .lang-toggle { height: 34px; }
+.content { padding: 24px; flex: 1; min-width: 0; }
+@media (min-width: 1600px) { .content { padding: 28px 32px; } }
+
+/* ─── Buttons ─── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--r-sm);
+  font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; font-family: inherit;
+  line-height: 1.4; transition: background .15s, border-color .15s, box-shadow .15s;
+}
+/* ห้ามตัดบรรทัดเฉพาะปุ่มในแถบเครื่องมือ — ปุ่มในฟอร์มต้องยุบได้บนจอแคบ */
+.filter-bar .btn, .topbar .btn, .pagination .btn { white-space: nowrap; }
+.btn:focus-visible { outline: none; box-shadow: var(--ring); }
+.btn-primary { background: var(--primary); color: #fff; box-shadow: var(--sh-1); }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-ghost { background: #fff; color: var(--gray-700); border-color: var(--gray-300); }
+.btn-ghost:hover { background: var(--gray-50); border-color: var(--gray-400); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: #b91c1c; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-block { width: 100%; justify-content: center; }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* ─── Cards ─── */
+/* min-width:0 กัน grid/flex ที่ครอบอยู่ดันการ์ดให้กว้างเกินจอ */
+.card { background: #fff; border-radius: var(--r-md); border: 1px solid var(--line); margin-bottom: 16px; box-shadow: var(--sh-1); min-width: 0; }
+.card-header { padding: 14px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.card-title { font-size: 14px; font-weight: 650; letter-spacing: -.005em; }
+.card-body { padding: 20px; }
+.card-header + .table-wrap table thead th { background: #fff; }
+/* ฟอร์มยาว ๆ ไม่ควรกว้างเต็มจอ และควรอยู่กลางเมื่อจอกว้าง */
+.card-narrow { max-width: 820px; margin-left: auto; margin-right: auto; }
+
+/* ─── KPI ─── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+.kpi-card { background: #fff; border-radius: 10px; border: 1px solid var(--gray-200); padding: 16px 20px; display: flex; align-items: center; gap: 14px; }
+.kpi-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.kpi-icon.blue { background: var(--primary-light); } .kpi-icon.green { background: var(--success-light); }
+.kpi-icon.yellow { background: var(--warning-light); } .kpi-icon.red { background: var(--danger-light); }
+.kpi-val { font-size: 26px; font-weight: 700; line-height: 1; }
+.kpi-label { font-size: 12px; color: var(--gray-500); margin-top: 3px; }
+
+/* ─── Tables ─── */
+.table-wrap { overflow-x: auto; max-width: 100%; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--gray-50); padding: 9px 14px; text-align: left; font-size: 11px; font-weight: 600;
+  color: var(--gray-500); text-transform: uppercase; letter-spacing: .05em;
+  border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+tbody td { padding: 11px 14px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: var(--gray-50); }
+/* ชื่อคน/วันที่/รหัสไม่ควรถูกตัดกลางคำ — ให้ตารางเลื่อนแนวนอนแทน */
+tbody td { overflow-wrap: normal; word-break: normal; }
+td .nowrap, .col-id, .col-date, .col-num { white-space: nowrap; }
+/* ชื่อคนตัดได้ที่ช่องว่างเท่านั้น ห้ามตัดกลางคำ */
+.col-person { min-width: 130px; }
+.col-date { font-size: 12px; color: var(--gray-600); }
+.col-subject { min-width: 220px; }
+/* ตัวเลขเรียงหลักให้ตรงกัน */
+.col-num, td .num { font-variant-numeric: tabular-nums; text-align: right; }
+.clickable { cursor: pointer; }
+.link { color: var(--primary); font-weight: 600; }
+tbody tr.clickable:hover .link { text-decoration: underline; }
+
+/* ─── Badges ─── */
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+.b-NEW { background: #dbeafe; color: #1d4ed8; } .b-NEW::before { background: #2563eb; }
+.b-AWAITING_APPROVAL { background: #ffedd5; color: #9a3412; } .b-AWAITING_APPROVAL::before { background: #f59e0b; }
+.b-ASSIGNED { background: #e0e7ff; color: #4338ca; } .b-ASSIGNED::before { background: #6366f1; }
+.b-IN_PROGRESS { background: #fef3c7; color: #92400e; } .b-IN_PROGRESS::before { background: #d97706; }
+.b-PENDING { background: #fce7f3; color: #9d174d; } .b-PENDING::before { background: #ec4899; }
+.b-RESOLVED { background: #dcfce7; color: #14532d; } .b-RESOLVED::before { background: #16a34a; }
+.b-CLOSED { background: var(--gray-100); color: var(--gray-600); } .b-CLOSED::before { background: var(--gray-400); }
+.b-CANCELLED { background: var(--gray-100); color: var(--gray-500); } .b-CANCELLED::before { background: var(--gray-400); }
+.b-IN_USE { background: #dcfce7; color: #14532d; } .b-IN_USE::before { background: #16a34a; }
+.b-IN_STOCK { background: #dbeafe; color: #1d4ed8; } .b-IN_STOCK::before { background: #2563eb; }
+.b-REPAIR { background: #fee2e2; color: #dc2626; } .b-REPAIR::before { background: #dc2626; }
+.b-LOANED { background: #fef3c7; color: #92400e; } .b-LOANED::before { background: #d97706; }
+.b-RETIRED { background: var(--gray-100); color: var(--gray-500); } .b-RETIRED::before { background: var(--gray-400); }
+.b-DISPOSED { background: #1f2937; color: #fff; } .b-DISPOSED::before { background: #9ca3af; }
+.b-AWAITING_APPROVAL { background: #fef3c7; color: #92400e; } .b-AWAITING_APPROVAL::before { background: #f59e0b; }
+/* ความสำคัญให้เป็น badge แบบเดียวกับสถานะ — เดิมเป็นตัวอักษรสีลอย ๆ ดูไม่เข้าชุดกัน */
+.prio {
+  display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 600; white-space: nowrap;
+}
+.prio::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.p-CRITICAL { background: #fdeaea; color: #9b1c1c; } .p-CRITICAL::before { background: var(--c-critical); }
+.p-HIGH     { background: #fdeee6; color: #9a3d16; } .p-HIGH::before     { background: var(--c-serious); }
+.p-MEDIUM   { background: #fdf3e0; color: #8a5a00; } .p-MEDIUM::before   { background: var(--c-warning); }
+.p-LOW      { background: #e6f6e6; color: #146c14; } .p-LOW::before      { background: var(--c-good); }
+
+/* ─── Filter bar ───
+   หมายเหตุ: กฎ `input, textarea, select { width: 100% }` ด้านล่างทำให้ select ในแถบกรอง
+   ขยายเต็มความกว้างแล้วเรียงซ้อนกันเป็นแนวตั้ง ต้อง reset ที่นี่ */
+.filter-bar {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 10px 12px; box-shadow: var(--sh-1);
+}
+.filter-bar select.filter, .filter-bar input.filter, .filter-bar .search-input { width: auto; }
+.filter-bar select.filter { min-width: 140px; max-width: 220px; }
+/* ดันปุ่มไปชิดขวาเฉพาะเมื่อมีตัวกรองอยู่ด้วย */
+.filter-bar:has(select, input) .btn:first-of-type { margin-left: auto; }
+.filter-bar .btn + .btn { margin-left: 0; }
+/* แถบที่มีแต่ปุ่ม ไม่ต้องมีกรอบการ์ด */
+.filter-bar:not(:has(select, input)) { background: none; border: 0; padding: 0; box-shadow: none; }
+.dashboard-filters select.filter { width: auto; max-width: 100%; }
+.search-input { flex: 1 1 200px; min-width: 180px; max-width: 300px; padding: 7px 12px; border: 1px solid var(--gray-300); border-radius: var(--r-sm); font-size: 13px; outline: none; background: #fff; }
+.search-input:focus { border-color: var(--primary); box-shadow: var(--ring); }
+select.filter, input.filter, .form-group select { padding: 7px 10px; border: 1px solid var(--gray-300); border-radius: var(--r-sm); font-size: 13px; background: #fff; outline: none; }
+select.filter, .form-group select { cursor: pointer; }
+select.filter:focus, input.filter:focus { border-color: var(--primary); box-shadow: var(--ring); }
+
+/* ─── Forms ─── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+label { font-size: 12.5px; font-weight: 600; color: var(--gray-700); }
+label .req { color: var(--danger); }
+input, textarea, select { padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: var(--r-sm); font-size: 13px; font-family: inherit; outline: none; width: 100%; background: #fff; color: inherit; transition: border-color .15s, box-shadow .15s; }
+input::placeholder, textarea::placeholder { color: var(--gray-400); }
+input:hover, textarea:hover, select:hover { border-color: var(--gray-400); }
+input:focus, textarea:focus, select:focus { border-color: var(--primary); box-shadow: var(--ring); }
+textarea { resize: vertical; min-height: 80px; line-height: 1.55; }
+.form-hint { font-size: 11px; color: var(--gray-500); }
+.ticket-asset-fieldset { border: 0; min-width: 0; padding: 0; }
+.ticket-asset-fieldset legend { margin-bottom: 8px; font-size: 13px; font-weight: 600; }
+.ticket-asset-modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; background: var(--gray-100); border-radius: 6px; }
+.ticket-asset-modes label { position: relative; margin: 0; cursor: pointer; min-width: 0; }
+.ticket-asset-modes input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.ticket-asset-modes span { display: flex; justify-content: center; align-items: center; min-height: 42px; padding: 6px 4px; border-radius: 4px; font-size: 13px; text-align: center; color: var(--gray-600); }
+.ticket-asset-modes input:checked + span { background: #fff; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.ticket-asset-modes input:focus-visible + span { outline: 2px solid var(--primary); outline-offset: 1px; }
+.ticket-asset-summary { grid-column: 1 / -1; border-top: 1px solid var(--gray-200); padding-top: 14px; display: grid; gap: 8px; font-size: 13px; }
+.ticket-asset-summary > div { display: grid; grid-template-columns: 125px minmax(0,1fr); gap: 12px; }
+.ticket-asset-summary span { color: var(--gray-500); }
+.ticket-asset-summary strong { font-weight: 600; overflow-wrap: anywhere; }
+@media (max-width: 500px) {
+  .ticket-asset-modes { grid-template-columns: 1fr; }
+  .ticket-asset-summary > div { grid-template-columns: 1fr; gap: 2px; }
+}
+.import-help { margin-top: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; color: var(--gray-500); font-size: 12px; }
+.import-summary { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ─── Grids ─── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ─── Workflow ─── */
+.workflow { display: flex; align-items: center; gap: 4px; }
+.wf-step { flex: 1; text-align: center; padding: 6px 8px; background: var(--gray-100); border-radius: 4px; font-size: 12px; font-weight: 500; color: var(--gray-400); }
+.wf-step.done { background: var(--success-light); color: var(--success); }
+.wf-step.current { background: var(--primary); color: #fff; }
+.wf-arrow { color: var(--gray-300); }
+
+/* ─── Comments ─── */
+.comment { display: flex; gap: 10px; margin-bottom: 12px; }
+.comment-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--primary); flex-shrink: 0; }
+.comment-content { flex: 1; background: var(--gray-50); border-radius: 8px; padding: 10px 12px; }
+.comment-content.internal { background: #fffbeb; border: 1px solid #fde68a; }
+.comment-author { font-size: 12px; font-weight: 600; }
+.comment-time { font-size: 11px; color: var(--gray-400); margin-left: 8px; }
+.comment-text { font-size: 13px; margin-top: 4px; line-height: 1.5; white-space: pre-wrap; }
+
+/* ─── Progress ─── */
+.progress-bar { background: var(--gray-200); border-radius: 100px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--primary); height: 100%; }
+
+/* ─── Misc ─── */
+.spinner { border: 3px solid var(--gray-200); border-top-color: var(--primary); border-radius: 50%; width: 28px; height: 28px; animation: spin .7s linear infinite; margin: 40px auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty { text-align: center; color: var(--gray-400); padding: 40px; font-size: 14px; }
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--gray-800); color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 13px; z-index: 1000; box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+.toast.error { background: var(--danger); }
+.toast.success { background: var(--success); }
+.pagination { padding: 12px 20px; border-top: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.45); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 500; padding: 24px; }
+.modal { background: #fff; border-radius: var(--r-lg); width: 720px; max-width: 92vw; max-height: 90vh; overflow-y: auto; box-shadow: var(--sh-3); }
+.modal.relation-modal { width: 920px; }
+.relation-modal .form-hint { white-space: normal; overflow-wrap: anywhere; color: var(--gray-600); line-height: 1.45; }
+.dl { display: grid; grid-template-columns: 140px 1fr; gap: 8px; font-size: 13px; }
+.dl dt { color: var(--gray-500); } .dl dd { font-weight: 500; }
+
+/* ═══════════ DASHBOARD — WOW ═══════════ */
+/* Hero — พื้นขาว เส้นบาง ไม่ใช้ gradient เต็มใบ ให้ตัวเลขเป็นพระเอกแทนสี */
+.dash-hero {
+  position: relative; overflow: hidden; border-radius: var(--r-lg); padding: 22px 24px; margin-bottom: 18px;
+  background: #fff; border: 1px solid var(--line); color: var(--gray-800); box-shadow: var(--sh-1);
+}
+.dash-hero h2 { font-size: 19px; font-weight: 700; letter-spacing: -.015em; color: var(--gray-800); }
+.dash-hero p { font-size: 13px; color: var(--gray-500); margin-top: 5px; }
+.dash-hero .hero-deco { display: none; }
+.dash-hero .hero-pills { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.hero-pill {
+  background: var(--gray-50); border: 1px solid var(--line); color: var(--gray-600);
+  padding: 6px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 500;
+}
+.hero-pill b { font-weight: 700; margin-right: 5px; color: var(--gray-800); font-variant-numeric: tabular-nums; }
+
+/* Stat card — พื้นขาว ใช้สีเฉพาะไอคอนเล็ก ๆ ตัวเลขอยู่บนหมึกปกติจึงอ่านง่ายที่สุด */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 18px; }
+.stat-card {
+  position: relative; overflow: hidden; border-radius: var(--r-md); padding: 16px 18px;
+  background: #fff; border: 1px solid var(--line); color: var(--gray-800);
+  box-shadow: var(--sh-1); transition: box-shadow .18s ease, border-color .18s ease;
+}
+.stat-card:hover { box-shadow: var(--sh-2); border-color: var(--gray-300); }
+.stat-card .blob { display: none; }
+.stat-top { display: flex; align-items: center; justify-content: space-between; }
+.stat-ic {
+  font-size: 17px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r-sm); background: var(--gray-100);
+}
+.stat-card.v-blue .stat-ic   { background: #e8f0fd; }
+.stat-card.v-green .stat-ic  { background: #e3f6ec; }
+.stat-card.v-amber .stat-ic  { background: #fdf3e0; }
+.stat-card.v-red .stat-ic    { background: #fdeaea; }
+.stat-card.v-violet .stat-ic { background: #eeeafb; }
+.stat-card.v-cyan .stat-ic   { background: #e2f5f8; }
+.stat-trend { font-size: 11px; font-weight: 600; background: var(--gray-100); color: var(--gray-600); padding: 3px 9px; border-radius: 999px; }
+.stat-val { font-size: 30px; font-weight: 700; line-height: 1.05; margin-top: 14px; letter-spacing: -.02em; }
+.stat-label { font-size: 12.5px; color: var(--gray-500); margin-top: 5px; }
+
+.kpi-modern-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 18px; }
+.modern-kpi {
+  position: relative; overflow: hidden; background: #fff; border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 16px 18px; box-shadow: var(--sh-1);
+}
+/* เดิมมีวงกลมสีโผล่มุมขวาบนแล้วถูก overflow ตัด ดูเหมือนความผิดพลาด — เอาออก */
+.modern-kpi::after { content: none; }
+/* การ์ด/ป้ายบน Dashboard ที่คลิกไปดูรายการ ticket ได้ */
+.modern-kpi.is-link, .hero-pill.is-link { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+.modern-kpi.is-link:hover, .modern-kpi.is-link:focus-visible { transform: translateY(-2px); box-shadow: var(--sh-2, 0 6px 18px rgba(15, 23, 42, .12)); outline: none; }
+.hero-pill.is-link:hover, .hero-pill.is-link:focus-visible { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(15, 23, 42, .15); outline: none; }
+.mk-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--gray-500); font-size: 12px; font-weight: 600; }
+.mk-top b { color: var(--gray-600); font-size: 11px; font-weight: 600; background: var(--gray-100); padding: 3px 8px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+.mk-value { margin-top: 10px; font-size: 30px; font-weight: 700; letter-spacing: -.02em; line-height: 1.05; color: var(--gray-800); }
+.mk-sub { margin-top: 4px; font-size: 12px; color: var(--gray-500); min-height: 18px; }
+.mk-track { height: 6px; background: var(--c-track); border-radius: 999px; overflow: hidden; margin-top: 14px; }
+.mk-track span { display: block; height: 100%; border-radius: inherit; background: var(--c-series-1); animation: growbar .9s cubic-bezier(.22,1,.36,1); }
+/* แถบใช้สีสถานะเฉพาะตอนสื่อความหมาย (เกิน SLA) ที่เหลือเป็นสีเดียวทั้งหมด */
+.modern-kpi.red .mk-track span { background: var(--c-critical); }
+.modern-kpi.amber .mk-track span { background: var(--c-warning); }
+.modern-kpi.green .mk-track span { background: var(--c-good); }
+
+.dashboard-lab { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(280px, .55fr); gap: 16px; margin-bottom: 16px; }
+.kpi-panel { background: #fff; border: 1px solid var(--gray-200); border-radius: 16px; padding: 18px; box-shadow: 0 10px 26px rgba(15,23,42,.06); }
+.kpi-panel-main { background: linear-gradient(180deg, #fff 0%, #f8fbff 100%); }
+.panel-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+.panel-head h3 { font-size: 16px; margin: 2px 0 0; color: var(--gray-900); }
+.eyebrow { font-size: 11px; font-weight: 800; color: var(--primary); letter-spacing: .06em; }
+.panel-chip { font-size: 11.5px; color: var(--gray-600); background: var(--gray-100); border-radius: 999px; padding: 5px 10px; white-space: nowrap; }
+.kpi-showcase { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 18px; align-items: center; }
+.sla-gauge { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.sla-svg { width: 170px; height: 170px; }
+.gauge-bg, .gauge-fg { fill: none; stroke-width: 16; }
+.gauge-bg { stroke: var(--gray-100); }
+.gauge-fg { transform: rotate(-90deg); transform-origin: 80px 80px; stroke-linecap: round; animation: dashin .9s ease both; }
+@keyframes dashin { from { stroke-dasharray: 0 999; } }
+.gauge-num { font-size: 28px; font-weight: 850; fill: var(--gray-900); }
+.gauge-sub { font-size: 11px; fill: var(--gray-500); font-weight: 700; }
+.gauge-meta { display: flex; flex-direction: column; gap: 8px; min-width: 80px; }
+.gauge-meta div { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 10px; padding: 9px 10px; }
+.gauge-meta b { display: block; font-size: 16px; color: var(--gray-900); }
+.gauge-meta span { display: block; font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+.repair-trend { min-width: 0; color: var(--gray-800); }
+.repair-trend-head h4 { margin: 0; font-size: 15px; }
+.repair-trend-head p { margin: 4px 0 12px; font-size: 12px; color: var(--gray-500); }
+.repair-trend-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; margin-bottom: 16px; }
+.repair-trend-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.repair-trend-legend i { width: 10px; height: 10px; border-radius: 2px; }
+/* 2 ชุดข้อมูล — คู่สีนี้ผ่านการตรวจ CVD/contrast ทั้งโหมดสว่างและมืด */
+.repair-blue { background: var(--c-series-1); }
+.repair-green { background: var(--c-series-2); }
+.repair-trend-unit, .repair-trend-axis { font-size: 11px; color: var(--gray-500); }
+.repair-trend-unit { margin-bottom: 26px; }
+.repair-trend-plot { position: relative; margin-left: 32px; height: 160px; }
+.repair-trend-grid { position: absolute; inset: 0; pointer-events: none; }
+.repair-trend-grid > div { position: absolute; width: 100%; border-top: 1px solid var(--gray-200); }
+.repair-trend-grid span { position: absolute; right: calc(100% + 8px); top: -8px; font-size: 11px; color: var(--gray-500); }
+.repair-trend-columns { display: grid; height: 100%; position: relative; }
+.repair-week { appearance: none; position: relative; min-width: 0; height: 100%; margin: 0; padding: 0 5px; border: 0; border-radius: 0; background: transparent; cursor: pointer; color: inherit; font: inherit; }
+.repair-week:hover, .repair-week.is-active { background: rgba(37, 99, 235, .05); }
+.repair-week:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+.repair-week-bars { display: flex; height: 100%; align-items: flex-end; justify-content: center; gap: 5px; }
+.repair-bar { position: relative; display: block; width: 18px; max-width: 40%; border-radius: 3px 3px 0 0; }
+.repair-bar b { position: absolute; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%); font-size: 12px; line-height: 18px; font-weight: 700; }
+/* ตัวเลขบนแท่งใช้หมึกปกติ ไม่ใช้สีของชุดข้อมูล */
+.repair-blue b, .repair-green b { color: var(--gray-600); }
+.repair-week-label { position: absolute; top: calc(100% + 8px); left: 0; width: 100%; font-size: 11px; white-space: nowrap; }
+.repair-trend-axis { text-align: right; margin-top: 32px; }
+.repair-trend-detail { border-top: 1px solid var(--gray-200); margin-top: 10px; padding-top: 10px; min-height: 52px; font-size: 12px; line-height: 20px; overflow-wrap: anywhere; }
+.repair-trend-empty { min-height: 230px; display: flex; justify-content: center; align-items: center; color: var(--gray-500); font-size: 13px; }
+@media (min-width: 901px) and (max-width: 1450px) {
+  .kpi-showcase { grid-template-columns: 1fr; }
+  .sla-gauge { justify-content: flex-start; }
+}
+@media (max-width: 600px) {
+  .kpi-panel-main .panel-head { flex-wrap: wrap; }
+}
+.priority-stack { display: flex; flex-direction: column; gap: 10px; }
+.priority-line { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--gray-700); }
+.priority-line div { display: flex; align-items: center; gap: 8px; }
+/* จุดสีบอกระดับความรุนแรง — มีข้อความกำกับเสมอ สีจึงไม่ได้สื่อความหมายลำพัง */
+.priority-line span { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.priority-line b { color: var(--gray-800); font-variant-numeric: tabular-nums; }
+.priority-track { height: 6px; border-radius: 999px; background: var(--c-track); overflow: hidden; margin-bottom: 2px; }
+/* แท่งเป็นชุดข้อมูลเดียว (จำนวนงาน) จึงใช้สีเดียว ความรุนแรงอ่านจากจุดและข้อความ */
+.priority-track i { display: block; height: 100%; border-radius: inherit; background: var(--c-series-1); animation: growbar .9s cubic-bezier(.22,1,.36,1); }
+
+/* แท่งแนวนอน — ชุดข้อมูลเดียวทั้งหมด ใช้สีเดียวกันทุกกราฟ ไม่สุ่มสีต่อการ์ด */
+.bar-row { margin-bottom: 14px; }
+.bar-row:last-child { margin-bottom: 0; }
+.bar-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 13px; margin-bottom: 6px; color: var(--gray-700); }
+.bar-head .v { font-weight: 600; color: var(--gray-800); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bar-track { height: 8px; border-radius: 999px; background: var(--c-track); overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 999px; background: var(--c-series-1); animation: growbar .9s cubic-bezier(.22,1,.36,1); }
+@keyframes growbar { from { width: 0 !important; } }
+
+/* donut */
+.donut-wrap { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; justify-content: center; padding: 6px 0; }
+.donut circle.seg { transition: stroke-dashoffset .7s ease; }
+.donut-num { font-size: 28px; font-weight: 800; fill: var(--gray-800); }
+.donut-sub { font-size: 11px; fill: var(--gray-500); }
+.legend { display: flex; flex-direction: column; gap: 11px; min-width: 180px; }
+.legend-item { display: flex; align-items: center; gap: 9px; font-size: 13px; }
+.legend-dot { width: 11px; height: 11px; border-radius: 4px; flex-shrink: 0; }
+.legend-item .lc { margin-left: auto; font-weight: 700; }
+
+@media (max-width: 900px) {
+  .kpi-grid, .stat-grid, .kpi-modern-grid { grid-template-columns: 1fr 1fr; }
+  .grid-2, .form-grid, .dashboard-lab, .kpi-showcase { grid-template-columns: 1fr; }
+  .sla-gauge { justify-content: flex-start; flex-wrap: wrap; }
+  /* sidebar เลื่อนออกนอกจอ เปิดด้วยปุ่ม ☰ บนแถบบน */
+  .sidebar { transform: translateX(-100%); transition: transform .22s ease; box-shadow: var(--sh-3); }
+  .app.nav-open .sidebar { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .nav-toggle { display: flex; }
+  .content { padding: 16px; }
+}
+/* ฉากหลังทึบตอนเปิดเมนูบนมือถือ */
+.nav-scrim { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 90; }
+@media (max-width: 900px) { .app.nav-open .nav-scrim { display: block; } }
+.nav-toggle {
+  display: none; align-items: center; justify-content: center; width: 36px; height: 34px;
+  background: #fff; border: 1px solid var(--gray-300); border-radius: var(--r-sm);
+  font-size: 16px; cursor: pointer; color: var(--gray-700); flex-shrink: 0;
+}
+.nav-toggle:hover { background: var(--gray-50); }
+[data-theme="dark"] .nav-toggle { background: #1e293b; border-color: #475569; color: #e2e8f0; }
+
+/* แถบบนบนจอแคบ — เดิมเนื้อหาล้นออกนอกจอ */
+@media (max-width: 720px) {
+  .topbar { padding: 0 12px; gap: 8px; }
+  .topbar .bc { display: none; }
+  .topbar .tt { font-size: 15px; }
+  .topbar-right { gap: 6px; min-width: 0; flex: 1 1 auto; }
+  .global-search { flex: 1 1 auto; min-width: 0; }
+  #global-search, #global-search:focus { width: 100%; }
+  .gs-results { width: min(340px, calc(100vw - 24px)); }
+  #logout-btn { padding: 5px 9px; }
+}
+
+/* ═══════════ Global Search ═══════════ */
+.global-search { position: relative; }
+.global-search .gs-ic { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 13px; opacity: .6; pointer-events: none; }
+#global-search { width: 260px; padding: 8px 12px 8px 32px; border: 1px solid var(--gray-200, #e2e8f0); border-radius: 9px; background: var(--gray-50, #f8fafc); font-size: 13px; transition: width .2s, box-shadow .2s, border-color .2s; }
+#global-search:focus { outline: none; width: 320px; border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+.gs-results { position: absolute; top: calc(100% + 6px); right: 0; width: 380px; max-height: 440px; overflow-y: auto; background: #fff; border: 1px solid var(--gray-200, #e2e8f0); border-radius: 12px; box-shadow: 0 12px 32px rgba(15,23,42,.16); z-index: 80; padding: 6px; }
+.gs-group-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--gray-400, #94a3b8); padding: 8px 10px 4px; }
+.gs-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+.gs-item:hover { background: var(--gray-50, #f1f5f9); }
+.gs-item .gs-t { font-size: 13px; font-weight: 600; color: var(--gray-800, #1e293b); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gs-item .gs-s { font-size: 11px; color: var(--gray-500, #64748b); }
+.gs-item .gs-tag { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; background: var(--gray-100, #f1f5f9); color: var(--gray-600, #475569); white-space: nowrap; }
+.gs-empty, .gs-hint { padding: 18px 12px; text-align: center; color: var(--gray-400, #94a3b8); font-size: 13px; }
+@media (max-width: 900px) { #global-search { width: 150px; } #global-search:focus { width: 180px; } .gs-results { width: 300px; } }
+
+/* ═══════════ Dark Mode ═══════════ */
+[data-theme="dark"] {
+  --primary-light: #1e3a5f;
+  --gray-50: #1e293b; --gray-100: #243044; --gray-200: #334155; --gray-300: #475569;
+  --gray-400: #94a3b8; --gray-500: #cbd5e1; --gray-600: #e2e8f0; --gray-700: #f1f5f9; --gray-800: #f8fafc;
+  --page-bg: #0f172a; --line: #334155;
+  --sh-1: 0 1px 2px rgba(0,0,0,.3);
+  --sh-2: 0 1px 3px rgba(0,0,0,.35), 0 4px 12px rgba(0,0,0,.25);
+  --sh-3: 0 8px 28px rgba(0,0,0,.5);
+  --ring: 0 0 0 3px rgba(96,165,250,.22);
+  /* สีกราฟฉบับโหมดมืด — ปรับ step ให้เข้ากับพื้นมืดโดยเฉพาะ ไม่ใช่กลับสีอัตโนมัติ */
+  --c-series-1: #3987e5; --c-series-2: #199e70; --c-track: #334155;
+  --c-critical: #e66767; --c-serious: #eb8b5f; --c-warning: #eda100; --c-good: #22c55e;
+}
+[data-theme="dark"] body { background: #0f172a; color: #e2e8f0; }
+[data-theme="dark"] .main, [data-theme="dark"] .content { background: #0f172a; }
+[data-theme="dark"] .card, [data-theme="dark"] .kpi-card, [data-theme="dark"] .modern-kpi,
+[data-theme="dark"] .kpi-panel, [data-theme="dark"] .topbar,
+[data-theme="dark"] .modal, [data-theme="dark"] .notif-panel, [data-theme="dark"] .gs-results,
+[data-theme="dark"] .login-card { background: #1e293b; border-color: #334155; color: #e2e8f0; }
+[data-theme="dark"] .kpi-panel-main { background: linear-gradient(180deg, #1e293b 0%, #111827 100%); }
+[data-theme="dark"] .gauge-meta div { background: #0f172a; border-color: #334155; }
+[data-theme="dark"] .topbar { border-bottom-color: #334155; }
+[data-theme="dark"] input, [data-theme="dark"] select, [data-theme="dark"] textarea,
+[data-theme="dark"] select.filter, [data-theme="dark"] .form-group select,
+[data-theme="dark"] .search-input, [data-theme="dark"] #global-search {
+  background: #0f172a; border-color: #334155; color: #e2e8f0;
+}
+[data-theme="dark"] #global-search:focus { background: #0f172a; }
+[data-theme="dark"] table thead th { background: #243044; color: #cbd5e1; }
+[data-theme="dark"] tbody tr:hover { background: #243044; }
+[data-theme="dark"] td, [data-theme="dark"] th { border-color: #334155; }
+[data-theme="dark"] .chip { background: #334155; color: #e2e8f0; }
+[data-theme="dark"] .comment-content.internal { background: #422006; border-color: #854d0e; }
+[data-theme="dark"] .gs-item:hover { background: #243044; }
+[data-theme="dark"] .btn-ghost { background: #1e293b; color: #e2e8f0; border-color: #475569; }
+[data-theme="dark"] .btn-ghost:hover { background: #243044; }
+[data-theme="dark"] .theme-toggle { color: #e2e8f0; }
+[data-theme="dark"] .topbar { background: rgba(30,41,59,.86); }
+[data-theme="dark"] .filter-bar { background: #1e293b; border-color: #334155; }
+[data-theme="dark"] .filter-bar:not(:has(select, input)) { background: none; }
+[data-theme="dark"] .dash-hero, [data-theme="dark"] .stat-card { background: #1e293b; border-color: #334155; color: #e2e8f0; }
+[data-theme="dark"] .dash-hero h2 { color: #f1f5f9; }
+[data-theme="dark"] .hero-pill { background: #243044; border-color: #334155; color: #cbd5e1; }
+[data-theme="dark"] .hero-pill b { color: #f8fafc; }
+[data-theme="dark"] .stat-ic { background: #243044 !important; }
+[data-theme="dark"] .card-header + .table-wrap table thead th { background: #1e293b; }
+/* badge/prio ในโหมดมืด — พื้นอ่อนของโหมดสว่างจะสว่างจ้าเกินไป */
+[data-theme="dark"] .prio { background: #243044; color: #e2e8f0; }
+.theme-toggle, .lang-toggle { background: #fff; border: 1px solid var(--gray-300); border-radius: var(--r-sm); min-width: 36px; height: 34px; padding: 0 8px; cursor: pointer; font-family: inherit; color: var(--gray-700); display: flex; align-items: center; justify-content: center; }
+.theme-toggle { font-size: 15px; }
+.lang-toggle { font-size: 12px; font-weight: 600; letter-spacing: .02em; }
+.theme-toggle:hover, .lang-toggle:hover { background: var(--gray-50); border-color: var(--gray-400); }
+[data-theme="dark"] .theme-toggle, [data-theme="dark"] .lang-toggle { background: #1e293b; border-color: #475569; }
