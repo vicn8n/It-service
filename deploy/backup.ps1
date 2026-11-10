@@ -1,6 +1,10 @@
 ﻿# ═══════════════════════════════════════════════════════════════
 #  backup.ps1 — สำรองฐานข้อมูล PostgreSQL + ไฟล์แนบ (uploads)
-#  ใช้ pg_dump (custom format) + หมุนเวียนเก็บย้อนหลัง N วัน
+#  ใช้ pg_dump (custom format) แล้วหมุนเวียน:
+#    - รายวัน   เก็บ KeepDays วัน         ($BackupDir\itsm_*)
+#    - รายเดือน เก็บชุดแรกของเดือน KeepMonths เดือน ($BackupDir\monthly\)
+#    - นอกเครื่อง (ถ้าตั้ง BACKUP_OFFSITE_DIR ใน .env) ใช้กติกาเดียวกัน
+#  exit 0 = สำเร็จ, 1 = backup ล้มเหลว, 2 = backup ในเครื่องสำเร็จแต่คัดลอกนอกเครื่องไม่ได้
 #
 #  ตั้ง Scheduled Task ให้รันทุกวัน เช่น:
 #    schtasks /Create /SC DAILY /ST 02:00 /TN "ITSM-Backup" ^
@@ -9,7 +13,9 @@
 
 param(
   [string]$BackupDir = "C:\backups\itsm",
-  [int]$KeepDays = 14
+  [int]$KeepDays = 14,
+  [int]$KeepMonths = 12,
+  [string]$OffsiteDir = ""   # ว่าง = อ่าน BACKUP_OFFSITE_DIR จาก .env
 )
 
 $ErrorActionPreference = "Stop"
@@ -31,7 +37,7 @@ if ($dbUrl -match "postgresql://([^:]+):([^@]+)@([^:/]+):?(\d*)/([^?]+)") {
 New-Item -ItemType Directory -Force -Path $BackupDir | Out-Null
 $dumpFile = Join-Path $BackupDir "itsm_db_$stamp.dump"
 
-Write-Host "[1/3] สำรองฐานข้อมูล $pgDb -> $dumpFile" -ForegroundColor Yellow
+Write-Host "[1/4] สำรองฐานข้อมูล $pgDb -> $dumpFile" -ForegroundColor Yellow
 $env:PGPASSWORD = $pgPass
 & pg_dump -h $pgHost -p $pgPort -U $pgUser -F c -f $dumpFile $pgDb
 if ($LASTEXITCODE -ne 0) { Write-Error "pg_dump ล้มเหลว"; exit 1 }
@@ -52,7 +58,7 @@ $uploads = if ([System.IO.Path]::IsPathRooted($uploadCfg)) { $uploadCfg } else {
 if (Test-Path $uploads) {
   $fileCount = (Get-ChildItem $uploads -File -Recurse | Measure-Object).Count
   $zip = Join-Path $BackupDir "itsm_uploads_$stamp.zip"
-  Write-Host "[2/3] สำรองไฟล์แนบจาก $uploads ($fileCount ไฟล์) -> $zip" -ForegroundColor Yellow
+  Write-Host "[2/4] สำรองไฟล์แนบจาก $uploads ($fileCount ไฟล์) -> $zip" -ForegroundColor Yellow
   if ($fileCount -eq 0) {
     Write-Host "  • ไม่มีไฟล์ให้สำรอง ข้าม" -ForegroundColor DarkGray
   } else {
@@ -75,14 +81,77 @@ if (Test-Path $uploads) {
     }
     Write-Host "  ✓ เสร็จ ($entryCount ไฟล์ใน zip)" -ForegroundColor Green
   }
-} else { Write-Host "[2/3] ข้าม uploads (ไม่พบโฟลเดอร์ $uploads)" -ForegroundColor DarkGray }
+} else { Write-Host "[2/4] ข้าม uploads (ไม่พบโฟลเดอร์ $uploads)" -ForegroundColor DarkGray }
 
-# ── หมุนเวียน: ลบ backup เก่ากว่า KeepDays วัน ──
-Write-Host "[3/3] ลบ backup เก่ากว่า $KeepDays วัน" -ForegroundColor Yellow
-$cutoff = (Get-Date).AddDays(-$KeepDays)
-Get-ChildItem $BackupDir -Filter "itsm_*" | Where-Object { $_.LastWriteTime -lt $cutoff } | ForEach-Object {
-  Remove-Item $_.FullName -Force; Write-Host "  - ลบ $($_.Name)" -ForegroundColor DarkGray
+# ── รายเดือน: เก็บชุดแรกของแต่ละเดือนไว้ใน monthly\ (ย้อนหลังได้ KeepMonths เดือน) ──
+# ทำก่อนลบรายวัน เพื่อให้เดือนที่ยังไม่มีสำเนาได้ไฟล์ที่เก่าที่สุดของเดือนนั้นไปเก็บ
+function Get-BackupMonth($name) { if ($name -match "^itsm_(db|uploads)_(\d{6})\d{2}_") { $matches[2] } }
+
+function Update-Monthly($dailyDir, $monthlyDir, $keepMonths) {
+  New-Item -ItemType Directory -Force -Path $monthlyDir | Out-Null
+  $have = @(Get-ChildItem $monthlyDir -Filter "itsm_*" | ForEach-Object { Get-BackupMonth $_.Name } | Sort-Object -Unique)
+  Get-ChildItem $dailyDir -Filter "itsm_*" -File |
+    Group-Object { Get-BackupMonth $_.Name } |
+    Where-Object { $_.Name -and ($have -notcontains $_.Name) } |
+    ForEach-Object {
+      # ชุดแรกของเดือน = รอบที่เก่าที่สุดที่มีไฟล์ฐานข้อมูล (db กับ uploads รอบเดียวกันใช้ stamp เดียวกัน)
+      # ไม่มี db เลยในเดือนนั้นค่อยใช้ uploads ที่เก่าที่สุด
+      $pool = @($_.Group | Where-Object { $_.Name -like "itsm_db_*" })
+      if (-not $pool.Count) { $pool = @($_.Group) }
+      $firstStamp = ($pool | ForEach-Object { ($_.BaseName -split "_", 3)[2] } | Sort-Object | Select-Object -First 1)
+      $_.Group | Where-Object { $_.BaseName.EndsWith($firstStamp) } | ForEach-Object {
+        Copy-Item $_.FullName $monthlyDir -Force
+        Write-Host "  + monthly: $($_.Name)" -ForegroundColor DarkGray
+      }
+    }
+  # เก็บไว้ KeepMonths เดือนล่าสุด
+  $months = @(Get-ChildItem $monthlyDir -Filter "itsm_*" | ForEach-Object { Get-BackupMonth $_.Name } | Sort-Object -Unique -Descending)
+  $drop = $months | Select-Object -Skip $keepMonths
+  Get-ChildItem $monthlyDir -Filter "itsm_*" | Where-Object { $drop -contains (Get-BackupMonth $_.Name) } | ForEach-Object {
+    Remove-Item $_.FullName -Force; Write-Host "  - ลบ monthly $($_.Name)" -ForegroundColor DarkGray
+  }
+}
+
+function Remove-OldDaily($dir, $keepDays) {
+  $cutoff = (Get-Date).AddDays(-$keepDays)
+  Get-ChildItem $dir -Filter "itsm_*" -File | Where-Object { $_.LastWriteTime -lt $cutoff } | ForEach-Object {
+    Remove-Item $_.FullName -Force; Write-Host "  - ลบ $($_.Name)" -ForegroundColor DarkGray
+  }
+}
+
+Write-Host "[3/4] เก็บรายเดือน ($KeepMonths เดือน) + ลบรายวันเก่ากว่า $KeepDays วัน" -ForegroundColor Yellow
+Update-Monthly $BackupDir (Join-Path $BackupDir "monthly") $KeepMonths
+Remove-OldDaily $BackupDir $KeepDays
+
+# ── สำเนานอกเครื่อง (NAS / share) — ตั้ง BACKUP_OFFSITE_DIR ใน .env เช่น \\nas01\backup\itsm ──
+$offsiteFailed = $false
+if (-not $OffsiteDir) {
+  $OffsiteDir = (Get-Content $envFile | Where-Object { $_ -match "^BACKUP_OFFSITE_DIR=" }) -replace "^BACKUP_OFFSITE_DIR=", "" -replace '"', ''
+}
+if ($OffsiteDir) {
+  Write-Host "[4/4] คัดลอกไปนอกเครื่อง: $OffsiteDir" -ForegroundColor Yellow
+  try {
+    New-Item -ItemType Directory -Force -Path $OffsiteDir -ErrorAction Stop | Out-Null
+    # คัดลอกเฉพาะไฟล์รายวันที่ปลายทางยังไม่มี (ครั้งแรกจะได้ย้อนหลังครบ KeepDays)
+    Get-ChildItem $BackupDir -Filter "itsm_*" -File | ForEach-Object {
+      $dest = Join-Path $OffsiteDir $_.Name
+      if (-not (Test-Path $dest) -or (Get-Item $dest).Length -ne $_.Length) {
+        Copy-Item $_.FullName $dest -Force -ErrorAction Stop
+        Write-Host "  → $($_.Name)" -ForegroundColor DarkGray
+      }
+    }
+    Update-Monthly $OffsiteDir (Join-Path $OffsiteDir "monthly") $KeepMonths
+    Remove-OldDaily $OffsiteDir $KeepDays
+    Write-Host "  ✓ สำเนานอกเครื่องเรียบร้อย" -ForegroundColor Green
+  } catch {
+    # backup ในเครื่องสำเร็จแล้ว ไม่ลบทิ้ง — แต่ต้องให้ Task Scheduler เห็นว่ามีปัญหา (exit 2)
+    $offsiteFailed = $true
+    Write-Warning "คัดลอกไปนอกเครื่องไม่สำเร็จ: $($_.Exception.Message)"
+  }
+} else {
+  Write-Host "[4/4] ข้ามสำเนานอกเครื่อง (ยังไม่ได้ตั้ง BACKUP_OFFSITE_DIR ใน .env)" -ForegroundColor DarkGray
 }
 
 Write-Host "`n✅ Backup เสร็จสมบูรณ์: $stamp" -ForegroundColor Green
 Write-Host "   กู้คืน DB:  pg_restore -h $pgHost -U $pgUser -d $pgDb --clean `"$dumpFile`"" -ForegroundColor Cyan
+if ($offsiteFailed) { exit 2 }
