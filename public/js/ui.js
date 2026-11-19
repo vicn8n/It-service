@@ -1,7 +1,7 @@
 // UI helpers — label, badge, format, toast, modal
 const TICKET_STATUS = {
   NEW: "ใหม่", AWAITING_APPROVAL: "รออนุมัติ", ASSIGNED: "มอบหมายแล้ว", IN_PROGRESS: "กำลังดำเนินการ",
-  PENDING: "รอดำเนินการ", RESOLVED: "แก้ไขแล้ว", CLOSED: "ปิด", CANCELLED: "ยกเลิก",
+  PENDING: "รอดำเนินการ", ON_REPAIR: "ส่งซ่อม/ส่งเคลม", RESOLVED: "แก้ไขแล้ว", CLOSED: "ปิด", CANCELLED: "ยกเลิก",
 };
 const PRIORITY = { CRITICAL: "วิกฤต", HIGH: "สูง", MEDIUM: "กลาง", LOW: "ต่ำ" };
 const ASSET_STATUS = {
@@ -115,6 +115,8 @@ function modal(html) {
 function slaTag(ticket) {
   if (["CLOSED", "CANCELLED", "RESOLVED"].includes(ticket.status))
     return `<span style="color:var(--gray-400);font-size:12px">—</span>`;
+  if (ticket.status === "ON_REPAIR" && !ticket.slaBreached)
+    return `<span style="color:#0d9488;font-weight:600;font-size:12px" title="ส่งซ่อม/ส่งเคลม — ไม่นับเวลา SLA">⏸ หยุด SLA</span>`;
   if (ticket.slaBreached) return `<span style="color:var(--danger);font-weight:600;font-size:12px">🔴 เกิน SLA</span>`;
   if (!ticket.resolveDueAt) return "—";
   const left = new Date(ticket.resolveDueAt) - Date.now();

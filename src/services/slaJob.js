@@ -8,7 +8,7 @@ async function checkSlaBreaches() {
       where: {
         slaBreached: false,
         resolveDueAt: { lt: now },
-        status: { notIn: ["RESOLVED", "CLOSED", "CANCELLED"] },
+        status: { notIn: ["RESOLVED", "CLOSED", "CANCELLED", "ON_REPAIR"] }, // ON_REPAIR = หยุดนับ SLA
       },
       data: { slaBreached: true },
     });
@@ -21,7 +21,7 @@ async function checkSlaBreaches() {
         responseBreached: false,
         firstRespAt: null,
         responseDueAt: { lt: now },
-        status: { notIn: ["RESOLVED", "CLOSED", "CANCELLED"] },
+        status: { notIn: ["RESOLVED", "CLOSED", "CANCELLED", "ON_REPAIR"] }, // ON_REPAIR = หยุดนับ SLA
       },
       data: { responseBreached: true },
     });

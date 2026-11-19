@@ -9,7 +9,10 @@ const { parsePaging } = require("../utils/pagination");
 const { audit } = require("../utils/audit");
 const { upload, verifyUpload, UPLOAD_DIR } = require("../middleware/upload");
 const { nextTicketNo } = require("../utils/ticketNo");
-const { computeSlaDeadlines, firstResponsePatch, RESPONDED_STATUSES } = require("../services/sla");
+const {
+  computeSlaDeadlines, firstResponsePatch, RESPONDED_STATUSES,
+  SLA_PAUSED_STATUSES, slaPausePatch, slaResumePatch, businessMinutesBetween, getBusinessSchedule,
+} = require("../services/sla");
 const { notifyTicketStatus } = require("../services/email");
 const { notify, notifyMany } = require("../services/notify");
 const { autoAssign } = require("../services/assign");
@@ -19,7 +22,7 @@ router.use(authenticate);
 
 const PRIORITIES = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
 const TYPES = ["INCIDENT", "SERVICE_REQUEST"];
-const STATUSES = ["NEW", "ASSIGNED", "IN_PROGRESS", "PENDING", "AWAITING_APPROVAL", "RESOLVED", "CLOSED", "CANCELLED"];
+const STATUSES = ["NEW", "ASSIGNED", "IN_PROGRESS", "PENDING", "ON_REPAIR", "AWAITING_APPROVAL", "RESOLVED", "CLOSED", "CANCELLED"];
 
 const ticketInclude = {
   category: true,
@@ -282,10 +285,26 @@ router.patch(
       const due = await computeSlaDeadlines(data.priority, data.categoryId ?? existing.categoryId, existing.createdAt);
       patch.responseDueAt = due.responseDueAt;
       patch.resolveDueAt = due.resolveDueAt;
+      // ระหว่างหยุด SLA ให้เทียบกับเวลาที่เริ่มหยุด ไม่ใช่ตอนนี้ (ช่วงส่งซ่อมไม่นับ)
+      const evalAt = existing.slaPausedAt ? new Date(existing.slaPausedAt) : now;
       // ธงเกิน SLA ที่ job ตั้งไว้ตามกำหนดเดิม ต้องประเมินใหม่ตามกำหนดใหม่
-      patch.slaBreached = now > due.resolveDueAt;
-      if (!existing.firstRespAt && !patch.firstRespAt) patch.responseBreached = now > due.responseDueAt;
+      patch.slaBreached = evalAt > due.resolveDueAt;
+      if (!existing.firstRespAt && !patch.firstRespAt) patch.responseBreached = evalAt > due.responseDueAt;
       else if (patch.firstRespAt) patch.responseBreached = patch.firstRespAt > due.responseDueAt;
+      if (existing.slaPausedAt) {
+        const schedule = await getBusinessSchedule();
+        patch.slaPausedRemaining = businessMinutesBetween(evalAt, due.resolveDueAt, schedule);
+        if (!existing.firstRespAt) patch.slaRespPausedRemaining = businessMinutesBetween(evalAt, due.responseDueAt, schedule);
+      }
+    }
+    // ส่งซ่อม/ส่งเคลม: หยุดนับ SLA ตอนเข้า, เลื่อนกำหนดออกไปตามเวลาที่หยุดตอนออก
+    const nextStatus = patch.status ?? existing.status;
+    const wasPaused = SLA_PAUSED_STATUSES.includes(existing.status) || !!existing.slaPausedAt;
+    const willPause = SLA_PAUSED_STATUSES.includes(nextStatus);
+    if (willPause && !existing.slaPausedAt) {
+      Object.assign(patch, await slaPausePatch({ ...existing, ...patch }, now));
+    } else if (!willPause && wasPaused) {
+      Object.assign(patch, await slaResumePatch({ ...existing, ...patch }, now));
     }
     // ประเมิน SLA breach ตอนปิดงานเลย — ไม่รอ job รอบ 5 นาที ซึ่งจะข้ามงานที่ปิดไปแล้ว
     const finishedAt = patch.resolvedAt ?? existing.resolvedAt;

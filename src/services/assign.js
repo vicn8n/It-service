@@ -1,6 +1,6 @@
 const prisma = require("../db");
 
-const OPEN_STATUSES = ["NEW", "ASSIGNED", "IN_PROGRESS", "PENDING"];
+const OPEN_STATUSES = ["NEW", "ASSIGNED", "IN_PROGRESS", "PENDING", "ON_REPAIR"];
 
 // เลือกเจ้าหน้าที่ที่งานค้างน้อยที่สุดจากชุด candidate ids
 async function pickLeastLoaded(candidateIds) {

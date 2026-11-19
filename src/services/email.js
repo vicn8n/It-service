@@ -56,6 +56,7 @@ const STATUS_LABEL = {
   ASSIGNED: "มอบหมายแล้ว",
   IN_PROGRESS: "กำลังดำเนินการ",
   PENDING: "รอดำเนินการ",
+  ON_REPAIR: "ส่งซ่อม/ส่งเคลม",
   RESOLVED: "แก้ไขแล้ว",
   CLOSED: "ปิดงาน",
   CANCELLED: "ยกเลิก",

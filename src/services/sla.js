@@ -77,6 +77,53 @@ function addBusinessMinutes(from, minutes, schedule) {
   throw new Error("ไม่สามารถคำนวณ SLA จากเวลาทำการได้");
 }
 
+// จำนวนนาทีในเวลาทำการระหว่าง from → to (to <= from คืน 0)
+function businessMinutesBetween(from, to, schedule) {
+  let cursor = nextBusinessStart(from, schedule);
+  const end = new Date(to);
+  let total = 0;
+  for (let guard = 0; guard < 10_000 && cursor < end; guard += 1) {
+    const row = schedule.get(cursor.getDay());
+    const dayEnd = atTime(cursor, row.endTime);
+    total += (Math.min(dayEnd, end) - cursor) / 60_000;
+    if (end <= dayEnd) break;
+    cursor = new Date(cursor);
+    cursor.setDate(cursor.getDate() + 1);
+    cursor.setHours(0, 0, 0, 0);
+    cursor = nextBusinessStart(cursor, schedule);
+  }
+  return Math.max(Math.round(total), 0);
+}
+
+// ─────────── หยุดนับ SLA (ส่งซ่อม/ส่งเคลม) ───────────
+const SLA_PAUSED_STATUSES = ["ON_REPAIR"];
+
+// เข้าสถานะหยุด SLA: เก็บเวลาทำการที่เหลือก่อนครบกำหนด (ถ้าเกินไปแล้วเหลือ 0 — ยังนับว่าเกิน)
+async function slaPausePatch(ticket, at = new Date()) {
+  if (ticket.slaPausedAt) return {};
+  const schedule = await getBusinessSchedule();
+  const patch = { slaPausedAt: at };
+  if (ticket.resolveDueAt) patch.slaPausedRemaining = businessMinutesBetween(at, ticket.resolveDueAt, schedule);
+  if (ticket.responseDueAt && !ticket.firstRespAt) {
+    patch.slaRespPausedRemaining = businessMinutesBetween(at, ticket.responseDueAt, schedule);
+  }
+  return patch;
+}
+
+// ออกจากสถานะหยุด SLA: เลื่อนกำหนดออกไป = ตอนนี้ + เวลาที่เหลือ ณ ตอนหยุด (ช่วงส่งซ่อมไม่ถูกนับ)
+async function slaResumePatch(ticket, at = new Date()) {
+  if (!ticket.slaPausedAt) return {};
+  const schedule = await getBusinessSchedule();
+  const patch = { slaPausedAt: null, slaPausedRemaining: null, slaRespPausedRemaining: null };
+  if (ticket.resolveDueAt && ticket.slaPausedRemaining > 0 && !ticket.slaBreached) {
+    patch.resolveDueAt = addBusinessMinutes(at, ticket.slaPausedRemaining, schedule);
+  }
+  if (ticket.responseDueAt && ticket.slaRespPausedRemaining > 0 && !ticket.responseBreached) {
+    patch.responseDueAt = addBusinessMinutes(at, ticket.slaRespPausedRemaining, schedule);
+  }
+  return patch;
+}
+
 // ลำดับการเลือก: นโยบายของหมวดหมู่ → นโยบายค่าเริ่มต้นของระดับความสำคัญ (categoryId = null) → DEFAULT_SLA
 async function findSlaPolicy(priority, categoryId) {
   if (categoryId) {
@@ -101,7 +148,7 @@ async function computeSlaDeadlines(priority, categoryId, from = new Date()) {
 }
 
 // สถานะที่นับว่า "ตอบรับแล้ว" เมื่อเจ้าหน้าที่เปลี่ยนเข้าไป (มอบหมายเฉย ๆ ยังไม่นับ เพราะผู้แจ้งยังไม่ได้รับการติดต่อ)
-const RESPONDED_STATUSES = ["IN_PROGRESS", "PENDING", "RESOLVED", "CLOSED"];
+const RESPONDED_STATUSES = ["IN_PROGRESS", "PENDING", "ON_REPAIR", "RESOLVED", "CLOSED"];
 
 // ค่าที่ต้องเขียนลง ticket เมื่อเกิดการตอบรับครั้งแรก — คืน null ถ้าเคยตอบรับไปแล้ว
 function firstResponsePatch(ticket, at = new Date()) {
@@ -120,5 +167,9 @@ module.exports = {
   DEFAULT_SLA,
   DEFAULT_BUSINESS_HOURS,
   addBusinessMinutes,
+  businessMinutesBetween,
   getBusinessSchedule,
+  SLA_PAUSED_STATUSES,
+  slaPausePatch,
+  slaResumePatch,
 };

@@ -34,6 +34,26 @@ Pages.helpdesk = async (params = {}) => {
   const donut = segs.length ? donutChart(segs, activeTotal, "Ticket ทั้งหมด") : '<div class="empty">ยังไม่มีข้อมูล</div>';
   const priorityRows = (d.byPriority || []).map((p) => ({ label: PRIORITY[p.priority] || p.priority, count: p.count, color: PRIORITY_COLOR[p.priority] || "#94a3b8" }));
 
+  // ส่งซ่อม/ส่งเคลม — นับวันตามปฏิทินไทย (ส่งเมื่อวาน = 1 วัน)
+  const onRepair = (d.onRepair || []).map((t) => ({ ...t, days: daysSince(t.sentAt) }));
+  const repairMaxDays = onRepair.reduce((m, t) => Math.max(m, t.days), 0);
+  const repairLink = `role="link" tabindex="0" ${navAttr("tickets", { status: "ON_REPAIR" })} title="คลิกเพื่อดูรายการ"`;
+  const repairDaysTag = (n) => {
+    const cls = n >= 14 ? "is-late" : n >= 7 ? "is-warn" : "";
+    return `<span class="repair-days ${cls}">${n === 0 ? "วันนี้" : `${n} วัน`}</span>`;
+  };
+  const repairRows = onRepair.map((t) => `
+    <tr class="clickable" ${navAttr("ticket-detail", { id: t.id })}>
+      <td class="col-id link">${esc(t.ticketNo)}</td>
+      <td class="col-subject"><div style="font-weight:500">${esc(t.subject)}</div>
+        <div style="font-size:11.5px;color:var(--gray-500)">${esc(t.asset ? `${t.asset.assetTag} — ${t.asset.brand || ""} ${t.asset.model || ""}` : t.category?.name || "")}</div></td>
+      <td class="col-person">${esc(t.requester?.fullName || "")}<div style="font-size:11.5px;color:var(--gray-500)">${esc(t.requester?.department?.name || "")}</div></td>
+      <td>${priorityTag(t.priority)}</td>
+      <td class="col-person">${esc(t.assignee?.fullName || "—")}</td>
+      <td class="col-date">${fmtDate(t.sentAt)}</td>
+      <td>${repairDaysTag(t.days)}</td>
+    </tr>`).join("");
+
   return {
     title: "Dashboard — แจ้งซ่อม IT",
     html: `
@@ -64,7 +84,16 @@ Pages.helpdesk = async (params = {}) => {
         ${modernKpiCard("amber", "รอดำเนินการ", d.kpi.open, "NEW / ASSIGNED / IN PROGRESS", activeTotal ? Math.round((d.kpi.open / activeTotal) * 100) : 0, ticketsLink({ status: STATUS_GROUP_OPEN }, month, year))}
         ${modernKpiCard("green", "แก้ไขแล้ว", d.kpi.resolved, `อัตราแก้ไข ${d.kpi.resolutionRate}%`, d.kpi.resolutionRate, ticketsLink({ status: STATUS_GROUP_DONE }, month, year))}
         ${modernKpiCard("red", "เกิน SLA", d.kpi.breached, `KPI SLA ${d.kpi.slaCompliance}%`, 100 - d.kpi.slaCompliance, ticketsLink({ sla: "breached" }, month, year))}
+        ${modernKpiCard("teal", "ส่งซ่อม / ส่งเคลม", onRepair.length, onRepair.length ? `นานสุด ${repairMaxDays} วัน · ไม่นับ SLA` : "ไม่มีงานค้างส่งซ่อม", Math.min(100, Math.round((repairMaxDays / 30) * 100)), repairLink)}
       </div>
+      ${onRepair.length ? `<div class="card" style="margin-bottom:16px">
+        <div class="card-header"><div class="card-title">🔧 งานส่งซ่อม / ส่งเคลม (${onRepair.length} รายการ)</div>
+          <span style="font-size:12px;color:var(--gray-500)">เรียงจากส่งนานสุด · ไม่นับเวลา SLA ระหว่างส่งซ่อม</span></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>เลขที่</th><th>เรื่อง / อุปกรณ์</th><th>ผู้แจ้ง</th><th>ความสำคัญ</th><th>ผู้รับผิดชอบ</th><th>วันที่ส่ง</th><th>ส่งไปแล้ว</th></tr></thead>
+          <tbody>${repairRows}</tbody>
+        </table></div>
+      </div>` : ""}
       <div class="dashboard-lab">
         <div class="kpi-panel kpi-panel-main">
           <div class="panel-head"><div><div class="eyebrow">KPI SERVICE</div><h3>เป้าหมายแก้ไขภายใน 4 ชม.ทำงาน</h3></div><span class="panel-chip">จันทร์-ศุกร์ 08:00-18:00</span></div>
@@ -158,7 +187,7 @@ Pages.tickets = async (params = {}) => {
         <input class="search-input" id="f-q" placeholder="ค้นหา Ticket ID, หัวข้อ..." value="${esc(query.q)}">
         <select class="filter" id="f-status">
           <option value="">สถานะทั้งหมด</option>
-          <option value="${STATUS_GROUP_OPEN}" ${query.status === STATUS_GROUP_OPEN ? "selected" : ""}>▸ รอดำเนินการ (ใหม่/มอบหมาย/กำลังทำ/รอ)</option>
+          <option value="${STATUS_GROUP_OPEN}" ${query.status === STATUS_GROUP_OPEN ? "selected" : ""}>▸ รอดำเนินการ (ใหม่/มอบหมาย/กำลังทำ/รอ/ส่งซ่อม)</option>
           <option value="${STATUS_GROUP_DONE}" ${query.status === STATUS_GROUP_DONE ? "selected" : ""}>▸ แก้ไขแล้ว / ปิด</option>
           ${Object.entries(TICKET_STATUS).map(([k, v]) => `<option value="${k}" ${query.status === k ? "selected" : ""}>${v}</option>`).join("")}
         </select>
@@ -517,6 +546,7 @@ Pages["ticket-detail"] = async ({ id }) => {
                 ${kv("SLA ตอบรับ", fmtDateTime(t.responseDueAt))}
                 ${kv("ตอบรับเมื่อ", t.firstRespAt ? fmtDateTime(t.firstRespAt) + (t.responseBreached ? " (เกินกำหนด)" : "") : (t.responseBreached ? "ยังไม่ตอบรับ (เกินกำหนด)" : "—"))}
                 ${kv("SLA แก้ไข", fmtDateTime(t.resolveDueAt))}
+                ${t.slaPausedAt ? kv("หยุด SLA ตั้งแต่", fmtDateTime(t.slaPausedAt) + " (ส่งซ่อม/ส่งเคลม)") : ""}
               </div>
             </div>
             ${t.asset ? `<div style="background:var(--gray-50);border-radius:8px;padding:12px">
@@ -2574,7 +2604,7 @@ function kpiCard(color, icon, val, label) {
   return `<div class="kpi-card"><div class="kpi-icon ${color}">${icon}</div><div><div class="kpi-val">${val}</div><div class="kpi-label">${esc(label)}</div></div></div>`;
 }
 // ── Dashboard wow helpers ──
-const STATUS_COLOR = { NEW:"#3b82f6", ASSIGNED:"#6366f1", IN_PROGRESS:"#d97706", PENDING:"#ec4899",
+const STATUS_COLOR = { NEW:"#3b82f6", ASSIGNED:"#6366f1", IN_PROGRESS:"#d97706", PENDING:"#ec4899", ON_REPAIR:"#0d9488",
   RESOLVED:"#16a34a", CLOSED:"#94a3b8", CANCELLED:"#cbd5e1", AWAITING_APPROVAL:"#f59e0b",
   IN_USE:"#16a34a", IN_STOCK:"#3b82f6", REPAIR:"#dc2626", LOANED:"#d97706", RETIRED:"#94a3b8", DISPOSED:"#1f2937" };
 // สีระดับความรุนแรง — ใช้เป็นจุดเล็กคู่ข้อความเสมอ ไม่ให้สีสื่อความหมายลำพัง
@@ -2583,11 +2613,17 @@ const PRIORITY_COLOR = { CRITICAL: "#d03b3b", HIGH: "#eb6834", MEDIUM: "#eda100"
 const SERIES_1 = "#2a78d6";
 const SERIES_2 = "#1baf7a";
 // กลุ่มสถานะที่ใช้กรองจากการ์ด Dashboard — ต้องตรงกับที่ /api/dashboard นับ
-const STATUS_GROUP_OPEN = "NEW,ASSIGNED,IN_PROGRESS,PENDING";
+const STATUS_GROUP_OPEN = "NEW,ASSIGNED,IN_PROGRESS,PENDING,ON_REPAIR";
 const STATUS_GROUP_DONE = "RESOLVED,CLOSED";
 // attribute คลิกไปหน้ารายการแจ้งซ่อมพร้อมตัวกรอง (ส่งเดือน/ปีของ Dashboard ไปด้วย)
 function ticketsLink(filter, month, year) {
   return `role="link" tabindex="0" ${navAttr("tickets", { ...filter, month: String(month), year: String(year) })} title="คลิกเพื่อดูรายการ"`;
+}
+// จำนวนวันตามปฏิทิน (เวลาไทย) ตั้งแต่ date ถึงวันนี้
+function daysSince(date) {
+  if (!date) return 0;
+  const key = (d) => { const s = toDateInputValue(d); return Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)); };
+  return Math.max(0, Math.round((key(new Date()) - key(date)) / 86_400_000));
 }
 function modernKpiCard(variant, label, value, sub, pct, linkAttrs = "") {
   const safePct = Math.max(0, Math.min(100, Math.round(Number(pct) || 0)));

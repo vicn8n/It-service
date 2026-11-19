@@ -122,6 +122,7 @@ enum TicketStatus {
   ASSIGNED
   IN_PROGRESS
   PENDING
+  ON_REPAIR // ส่งซ่อม/ส่งเคลม — หยุดนับ SLA
   AWAITING_APPROVAL // รออนุมัติ
   RESOLVED
   CLOSED
@@ -207,6 +208,10 @@ model Ticket {
   slaBreached   Boolean   @default(false) @map("sla_breached")
   // ตอบรับครั้งแรก (firstRespAt) ช้ากว่า responseDueAt
   responseBreached Boolean @default(false) @map("response_breached")
+  // หยุดนับ SLA ระหว่างสถานะ ON_REPAIR: เวลาที่เริ่มหยุด + เวลาทำการ (นาที) ที่ยังเหลือก่อนครบกำหนด ณ ตอนหยุด
+  slaPausedAt            DateTime? @map("sla_paused_at")
+  slaPausedRemaining     Int?      @map("sla_paused_remaining")
+  slaRespPausedRemaining Int?      @map("sla_resp_paused_remaining")
 
   satisfaction Int?    @map("satisfaction_rating")
   feedback     String?

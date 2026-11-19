@@ -29,7 +29,7 @@ router.get(
 
     const [total, open, resolved, breached, byCategory, byStatus, byPriority, trendTickets] = await Promise.all([
       prisma.ticket.count({ where }),
-      prisma.ticket.count({ where: { ...where, status: { in: ["NEW", "ASSIGNED", "IN_PROGRESS", "PENDING"] } } }),
+      prisma.ticket.count({ where: { ...where, status: { in: ["NEW", "ASSIGNED", "IN_PROGRESS", "PENDING", "ON_REPAIR"] } } }),
       prisma.ticket.count({ where: { ...where, status: { in: ["RESOLVED", "CLOSED"] } } }),
       prisma.ticket.count({ where: { ...where, slaBreached: true } }),
       prisma.ticket.groupBy({ by: ["categoryId"], where, _count: true }),
@@ -40,6 +40,21 @@ router.get(
         select: { createdAt: true, status: true, slaBreached: true },
       }),
     ]);
+
+    // งานที่ส่งซ่อม/ส่งเคลมอยู่ตอนนี้ — ไม่จำกัดเดือน เพราะเป็นงานค้างที่ยังรอของกลับ (เก่าสุดขึ้นก่อน)
+    const onRepairRows = await prisma.ticket.findMany({
+      where: { ...scope, status: "ON_REPAIR" },
+      orderBy: [{ slaPausedAt: "asc" }, { updatedAt: "asc" }],
+      take: 100,
+      select: {
+        id: true, ticketNo: true, subject: true, priority: true, slaPausedAt: true, updatedAt: true,
+        requester: { select: { fullName: true, department: { select: { name: true } } } },
+        assignee: { select: { fullName: true } },
+        asset: { select: { assetTag: true, brand: true, model: true } },
+        category: { select: { name: true } },
+      },
+    });
+    const onRepair = onRepairRows.map(({ slaPausedAt, updatedAt, ...t }) => ({ ...t, sentAt: slaPausedAt || updatedAt }));
 
     const cats = await prisma.category.findMany();
     const catMap = Object.fromEntries(cats.map((c) => [c.id, c.name]));
@@ -72,6 +87,7 @@ router.get(
         .sort((a, b) => PRIORITY_ORDER.indexOf(a.priority) - PRIORITY_ORDER.indexOf(b.priority))
         .map((r) => ({ priority: r.priority, count: r._count })),
       trend: Array.from(trendMap.values()),
+      onRepair,
     });
   })
 );

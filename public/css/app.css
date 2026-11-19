@@ -179,6 +179,7 @@ tbody tr.clickable:hover .link { text-decoration: underline; }
 .b-ASSIGNED { background: #e0e7ff; color: #4338ca; } .b-ASSIGNED::before { background: #6366f1; }
 .b-IN_PROGRESS { background: #fef3c7; color: #92400e; } .b-IN_PROGRESS::before { background: #d97706; }
 .b-PENDING { background: #fce7f3; color: #9d174d; } .b-PENDING::before { background: #ec4899; }
+.b-ON_REPAIR { background: #ccfbf1; color: #115e59; } .b-ON_REPAIR::before { background: #0d9488; }
 .b-RESOLVED { background: #dcfce7; color: #14532d; } .b-RESOLVED::before { background: #16a34a; }
 .b-CLOSED { background: var(--gray-100); color: var(--gray-600); } .b-CLOSED::before { background: var(--gray-400); }
 .b-CANCELLED { background: var(--gray-100); color: var(--gray-500); } .b-CANCELLED::before { background: var(--gray-400); }
@@ -331,7 +332,13 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.55; }
 .stat-val { font-size: 30px; font-weight: 700; line-height: 1.05; margin-top: 14px; letter-spacing: -.02em; }
 .stat-label { font-size: 12.5px; color: var(--gray-500); margin-top: 5px; }
 
-.kpi-modern-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 18px; }
+.kpi-modern-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin-bottom: 18px; }
+@media (max-width: 1280px) and (min-width: 901px) { .kpi-modern-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.modern-kpi.teal .mk-track span { background: #0d9488; }
+/* จำนวนวันที่ส่งซ่อม: 7+ วันเหลือง, 14+ วันแดง */
+.repair-days { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: #ccfbf1; color: #115e59; white-space: nowrap; }
+.repair-days.is-warn { background: #fef3c7; color: #92400e; }
+.repair-days.is-late { background: #fee2e2; color: #991b1b; }
 .modern-kpi {
   position: relative; overflow: hidden; background: #fff; border: 1px solid var(--line);
   border-radius: var(--r-md); padding: 16px 18px; box-shadow: var(--sh-1);
